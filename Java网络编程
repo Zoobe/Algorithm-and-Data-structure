@@ -1,0 +1,32 @@
+Java网络编程
+
+1、定义发送端
+
+class UdpSend
+{
+        public static void main(String[] args) throws Exception
+        {
+                //1、创建UDP服务，通过DatagramSocket对象
+                DatagramSocket ds = new DatagramSocket();
+                
+                //2、确定数据，并封装成数据包。DatagramPacket(byte[] buf, int length, InetAddress address,int port)
+                byte[] buf = "udp ge men lai le".getBytes();
+                DatagramPacket dp = new DatagramPacket(buf,buf.length,InetAddress.getByName("192.168.1.254"),10000);//将数据发送到IP为192.168.1.254的主机上
+                                                                                                                    //并指定接收端口为10000
+                //3、通过socket服务，将已有的数据包发送出去，通过send方法
+                ds.send(dp);
+                
+                //4、关闭资源
+                ds.close();
+        }
+}  
+
+2、定义接受端
+/*注意：这是两个独立的应用程序，应该写在不同的class文件中，且都应该带主函数
+需求：定义一个应用程序，用于接收UDP协议传输的数据并处理的
+思路：
+1、定义UDPSocket服务。
+2、定义一个数据包(刚开始数据包是空的),用于存储接受到的字节数据。因为数据包对象中有更多的功能可以提取字节数据中的不同数据信息
+3、通过Socket服务的receive方法将接收到的数据存入已经定义好的数据包中。
+4、通过数据包对象的特有功能，将这些不同的数据取出。打印在控制台上。
+*/
