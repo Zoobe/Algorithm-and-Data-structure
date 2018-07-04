@@ -1,6 +1,6 @@
 Java网络编程
-
-1、定义发送端
+import.net.*;
+//1、定义发送端
 
 class UdpSend
 {
@@ -22,7 +22,8 @@ class UdpSend
         }
 }  
 
-2、定义接受端
+//2、定义接受端
+
 /*注意：这是两个独立的应用程序，应该写在不同的class文件中，且都应该带主函数
 需求：定义一个应用程序，用于接收UDP协议传输的数据并处理的
 
@@ -58,3 +59,227 @@ class UdpRece
 }
 
 //注意：有时候会出现java.net.BindException接口绑定异常，要使用的接口已经被使用或者该端口虽然已经结束使用但是还没有被释放
+
+//更改输入流为键盘输入
+class UdpSend2
+{
+	public static void main(String[] args) throws Exception
+	{
+		DatagramSocket ds = new DatagramSocket();
+		
+		BufferedReader bufr = new BufferedReader(new InputStreamReader(System.in));
+		String line = null;
+		while((line = bufr.readLine())!= null)
+		{
+			if("886".equals(line)
+				break;
+			byte[] buf = line.getBytes();
+			
+			DatagramPacket dp = new DatagramPacket(buf,buf.length,InetAddress.getByName("192.168.1.254"),10001);
+			ds.send(dp);
+		}
+		ds.close();
+	}
+}
+
+
+class UdpRece2
+{
+	public static void main(String[] args) throws Exception
+	{
+		DatagramSocket ds = new DatagramSocket(10001);
+		while(true)
+		{
+			byte[] buf = new byte[1024];
+			DatagramPacket dp = new DatagramPacket(buf,buf.length);
+			
+			ds.receive(dp);
+			
+			String ip = dp.getAddress().getHostAddress();
+			String data = new String(dp.getData(),0,dp.getLength());
+			
+			System.out.println(ip+"::"+data);
+		}
+		//如果用于一直接收就不用关闭ds
+	}
+}
+
+/*
+编写一个聊天程序，
+有收数据的部分和发数据的部分。
+这两部分需要同时执行，那就需要用到多线程技术
+一个线程控制收，一个线程控制发。
+
+因为收和发的动作是不一致的，所以要定义两个run方法，而且这两个方法要封装到不同的类中。
+*/
+
+class Send implements Runnable
+{
+	private DatagramSocket ds;
+	public Send(DatagramSocket ds)
+	{
+		this.ds = ds;
+	}
+	public void run()
+	{
+		try
+		{
+			BufferedReader bufr = new BufferedReader(new InputStreamReader(System.in);
+			String line = null;
+			while((line = bufr.readLine())!= null)
+			{
+				if("886".equals(line)
+					break;
+				
+				byte[] buf = line.getBytes();
+				
+				DatagramPacket dp = new DatagramPacket(buf,buf.length,InetAddress.getByName("192.168.1.255"),1000); //192.168.1.1是网络号，192.168.1.255是广播地址
+				ds.send(dp);
+			}
+		}
+		catch(Exception e)
+		{
+			throw new RunTimeException("发送失败！")；
+		}
+	}
+}
+
+class Rece implements Runnable
+{
+	private DatagramSocket ds;
+	public Rece(DatagramSocket ds)
+	{
+		this.ds = ds;
+	}
+	public void run()
+	{
+		try
+		{
+			while(true)
+			{
+				byte[] buf = new byte[1024];
+				DatagramPacket dp = new DatagramPacket(buf,buf.length);
+				ds.receive();
+				
+				String ip = dp.getAddress().getHostAddress();
+				
+				String data = new String(dp.getData(),0,dp.getLength());
+			
+				System.out.println(ip+"::"+data);
+				
+			}
+		}
+		catch(Exception e)
+		{
+			throw new RunTimeException("接收失败！")；
+		}
+	}
+}
+//聊天程序主函数
+class ChatDemo
+{
+        public static void main(String[]  args) throws Exception
+		{
+			DatagramSocket sendSocket = new DatagramSocket();
+			DatagramSocket receScoket = new DatagramSocket(10002);
+			
+			new Thread(new Send(sendSocket).start();
+			new Thread(new Rece(receScoket).start();
+			
+		}
+}
+
+
+/*
+TCP传输
+分为客户端Socket和服务端SeverScoket
+建立连接后，通过Socket中的IO流进行数据的传输
+
+客户端：
+通过查阅Socket对象，发现在该对象建立时，就需要指定被连接的主机。
+因为TCP是面向连接的，所以在建立Socket服务时，就要有服务端存在，并连接成功。形成通路后，就在该通道进行数据的传输。
+
+步骤：
+1、创建Socket服务，并指定要连接的主机和端口
+2、通过Socket获取输出（输入）流
+3、输出流写出数据
+4、关闭资源
+
+
+*/
+
+import java.io.*;
+import java.net.*;
+class TcpClient
+{
+	    public static void main(String[]  args) throws Exception
+		{
+			//创建客户端的Socket服务，指定目的主机和端口
+			Socket s = new Socket("192.168.1.254",10003);    //通路一旦建立，就会有一个Socket流，有输入流和输出流
+															//不用建立输入输出流，直接使用Socket流的方法调用便可
+			//为了发送数据，应该获取Socket流中的输出流
+			OutputStream out = s.getOutputStream();
+			
+			out.write("Tcp ge men lai le".getBytes());
+			s.close();
+		}
+}
+
+/*
+服务端：
+注意:服务端是通过获取到客户端Socket对象，使用客户端Socket的输入输出流来和客户端进行通信的。
+
+1、建立服务端的Socket服务，通过ServerSocket();并监听一个端口
+2、获取连接过来的客户端对象
+    通过Serversocketd 的accept方法。没有连接就会等，所以这个方法是阻塞式的。
+3、客户端如果发送过来数据，那么服务端要使用对应的客户端对象，并获取到该客户端的读取流来读取发过来的数据。
+4、关闭服务端（可选）
+
+*/
+
+class TcpServer
+{
+	    public static void main(String[]  args) throws Exception
+		{
+			//建立服务端的Socket服务，并监听一个端口。
+			ServerSocket ss = new ServerSocket(10003);
+			
+			//通过accept方法获取连接过来的客户端对象
+			Socket s = ss.accept();
+			
+			String ip = s.getInetAddress().getHostAddress();
+			System.out.println(ip);
+			
+			//获取客户端发送过来的数据，那么要使用客户端对象的流来读取数据
+			Inputstream in = s.getInputStream();
+
+			
+			byte[] buf = new byte[1024];
+			int len = in.read(buf);
+			
+			System.out.println(new String(buf,0,len));
+			
+			s.close();  //关闭客户端，防止占用服务端资源
+			ss.close();
+		}
+}
+
+//注意：启动的时候要先启动服务端，因为TCP是面向连接的，服务端没有开启的话客户端连不上
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
