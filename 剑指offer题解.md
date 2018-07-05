@@ -1,8 +1,8 @@
 # 合并两个排序的列表
-##题目要求：
+## 题目要求：
 输入两个单调递增的链表，输出两个链表合成后的链表，当然我们需要合成后的链表满足单调不减规则。
 
-###递归解法：
+### 递归解法：
 ~~~
 public class Solution
 {
@@ -25,7 +25,7 @@ public class Solution
 }
 ~~~
 
-###非递归解法：
+### 非递归解法：
 ~~~
 public class Solution {
     public ListNode Merge(ListNode list1,ListNode list2) {//将list1设为小
