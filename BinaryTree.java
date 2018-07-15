@@ -55,7 +55,7 @@ class BinaryTree{
 	{
 		Stack<TreeNode> stack =  new Stack<>();
 		
-		while( root!=null || stack.empty() )
+		while( root!=null || !stack.empty() )
 		{
 			while(root!=null)
 			{
