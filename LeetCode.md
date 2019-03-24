@@ -15,6 +15,90 @@
         return res;
     }
 ~~~
+### LeetCode15. 3Sum
+找到和为`0`的所有三个数
+~~~
+public List<List<Integer>> threeSum(int[] num) {
+    Arrays.sort(num);
+    List<List<Integer>> res = new LinkedList<>(); 
+    for (int i = 0; i < num.length-2; i++) {
+        if (i == 0 || (i > 0 && num[i] != num[i-1])) {
+            int lo = i+1, hi = num.length-1, sum = 0 - num[i];
+            while (lo < hi) {
+                if (num[lo] + num[hi] == sum) {
+                    res.add(Arrays.asList(num[i], num[lo], num[hi]));
+                    while (lo < hi && num[lo] == num[lo+1]) lo++;
+                    while (lo < hi && num[hi] == num[hi-1]) hi--;
+                    lo++; hi--;
+                } else if (num[lo] + num[hi] < sum) lo++;
+                else hi--;
+           }
+        }
+    }
+    return res;
+}
+~~~
+### LeetCode16. 3Sum Closest
+输入一组数组和`target`，找到距离`target`最近的三个数
+题解：和上题类似，先随便确定一个sum值，每次设置三个位置，绝对值较小就更新结果
+~~~
+public class Solution {
+    public int threeSumClosest(int[] num, int target) {
+        int result = num[0] + num[1] + num[num.length - 1];
+        Arrays.sort(num);
+        for (int i = 0; i < num.length - 2; i++) {
+            int start = i + 1, end = num.length - 1;
+            while (start < end) {
+                int sum = num[i] + num[start] + num[end];
+                if (sum > target) {
+                    end--;
+                } else {
+                    start++;
+                }
+                if (Math.abs(sum - target) < Math.abs(result - target)) {
+                    result = sum;
+                }
+            }
+        }
+        return result;
+    }
+}
+~~~
+### LeetCode18. 4Sum
+将题目转化为3Sum问题
+~~~
+public class Solution {
+public List<List<Integer>> fourSum(int[] num, int target) {
+    ArrayList<List<Integer>> ans = new ArrayList<>();
+    if(num.length<4)return ans;
+    Arrays.sort(num);
+    for(int i=0; i<num.length-3; i++){
+        if(num[i]+num[i+1]+num[i+2]+num[i+3]>target)break; //如果前四个数太大就可以直接结束
+        if(num[i]+num[num.length-1]+num[num.length-2]+num[num.length-3]<target)continue; //第一个数太小也可以直接结束
+        if(i>0&&num[i]==num[i-1])continue; //去除重复结果
+        for(int j=i+1; j<num.length-2; j++){
+            if(num[i]+num[j]+num[j+1]+num[j+2]>target)break; //第二个数太大
+            if(num[i]+num[j]+num[num.length-1]+num[num.length-2]<target)continue; //第二个参与者太小
+            if(j>i+1&&num[j]==num[j-1])continue; //prevents duplicate results in ans list
+            int low=j+1, high=num.length-1;
+            while(low<high){
+                int sum=num[i]+num[j]+num[low]+num[high];
+                if(sum==target){
+                    ans.add(Arrays.asList(num[i], num[j], num[low], num[high]));
+                    while(low<high&&num[low]==num[low+1])low++; //跳过左边重复的
+                    while(low<high&&num[high]==num[high-1])high--; //跳过右边重复的
+                    low++; 
+                    high--;
+                }
+                //move window
+                else if(sum<target)low++; 
+                else high--;
+            }
+        }
+    }
+    return ans;
+}
+~~~
 ### LeetCode2. Add Two Numbers
 ~~~
     public ListNode addTwoNumbers(ListNode l1, ListNode l2) {
@@ -400,8 +484,67 @@ public int candy(int[] ratings) {
     return sum;
 }
 ~~~
-### LeetCode42. Trapping Rain Water收集雨水
-
+### LeetCode84. Largest Rectangle in Histogram
+给定n个整数代表直方图的高度，每个直方图宽度默认为1，找到直方图中的最大矩形
+题解：这道题可以用单调栈来求解，单调栈又两种：
+ - 递增栈：递增栈是维护递增的顺序，当遇到小于栈顶元素的数就开始处理
+ - 递减栈：递减栈正好相反，维护递减的顺序，当遇到大于栈顶元素的数开始处理。
+   那么根据这道题的特点，我们需要按从高板子到低板子的顺序处理，先处理最高的板子，宽度为1，然后再处理旁边矮一些的板子，此时长度为2，因为之前的高板子可组成矮板子的矩形 ，`因此我们需要一个递增栈`，`当遇到大的数字直接进栈，而当遇到小于栈顶元素的数字时，就要取出栈顶元素进行处理了`，那取出的顺序就是从高板子到矮板子了，于是乎遇到的较小的数字只是一个触发，表示现在需要开始计算矩形面积了 </br>
+   为了使得最后一块板子也被处理，这里用了个小trick，在高度数组最后面加上一个0，这样原先的最后一个板子也可以被处理了。</br>
+   单调栈中不能放高度，而是需要放坐标。由于我们先取出栈中最高的板子，那么就可以先算出长度为1的矩形面积了，然后再取下一个板子，此时根据矮板子的高度算长度为2的矩形面积，以此类推，知道数字大于栈顶元素为止，再次进栈，巧妙的一比！
 ~~~
+public class Solution {
+    public int largestRectangleArea(int[] height) {
+        int len = height.length;
+        Stack<Integer> s = new Stack<Integer>();
+        int maxArea = 0;
+        for(int i = 0; i <= len; i++){
+            int h = (i == len ? 0 : height[i]);
+            if(s.isEmpty() || h >= height[s.peek()]){
+                s.push(i);
+            }else{
+                int tp = s.pop();
+                maxArea = Math.max(maxArea, height[tp] * (s.isEmpty() ? i : i - 1 - s.peek()));
+                i--;
+            }
+        }
+        return maxArea;
+    }
+}
+~~~
+### LeetCode85. Maximal Rectangle
+给定由`0`，`1`组成的二维矩阵，找到最大的矩形并求得其面积
+  此题是之前那道的 Largest Rectangle in Histogram 直方图中最大的矩形 的扩展，这道题的二维矩阵每一层向上都可以看做一个直方图，输入矩阵有多少行，就可以形成多少个直方图，对每个直方图都调用 Largest Rectangle in Histogram 直方图中最大的矩形 中的方法，就可以得到最大的矩形面积。那么这道题唯一要做的就是将每一层构成直方图，由于题目限定了输入矩阵的字符只有 '0' 和 '1' 两种，所以处理起来也相对简单。方法是，对于每一个点，如果是‘0’，则赋0，如果是 ‘1’，就赋 之前的height值加上1。
+  而且可以边构建height数组边计算最大面积
+~~~
+    public int maximalRectangle(char[][] matrix) {
+        if(matrix==null||matrix.length==0||matrix[0]==null||matrix[0].length==0) return 0;
+        int row = matrix.length;
+        int col = matrix[0].length;
+        int max = 0;
+        int[] heights = new int[col+1];
+        for(int i=0;i<row;i++){
+            Stack<Integer> stack = new Stack<>();
+            for(int j=0;j<col+1;j++){
+                if(j<col){
+                    if(matrix[i][j]=='1')
+                        heights[j]++;
+                    else heights[j] = 0;
+                }
+                
+                if(stack.isEmpty()||heights[stack.peek()]<=heights[j]){
+                    stack.push(j);
+                }else{
+                    while(!stack.isEmpty() && heights[stack.peek()]>heights[j]){
+                        int h = heights[stack.pop()];
+                        int w = stack.isEmpty()?j:(j-stack.peek()-1);
+                        max = Math.max(max,h*w);
+                    }
+                    stack.push(j);
+                }
 
+            }
+        }
+        return max;
+    }
 ~~~
