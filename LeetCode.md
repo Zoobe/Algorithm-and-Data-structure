@@ -99,6 +99,142 @@ public List<List<Integer>> fourSum(int[] num, int target) {
     return ans;
 }
 ~~~
+### LeetCode26. Remove Duplicates from Sorted Array
+~~~
+    public int removeDuplicates(int[] nums) {
+        if(nums==null) return 0;
+        int len = nums.length;
+        int count = 0;
+        for(int i=0;i<len;i++)
+        {
+            if(nums[i] != nums[count])
+                nums[++count] = nums[i];
+        }
+        return ++count;
+    }
+~~~
+### LeetCode27. Remove Element
+在数组中移除指定元素
+~~~
+public int removeElement(int[] A, int elem) {
+   int m = 0;    
+   for(int i = 0; i < A.length; i++){
+       
+       if(A[i] != elem){
+           A[m] = A[i];
+           m++;
+       }
+   }
+   
+   return m;
+}
+~~~
+### LeetCode28. Implement strStr()实现indexOf函数
+在字符串中第一次出现的位置，没有的话返回-1
+此题可以练习KMP算法
+~~~
+	// next数组计算
+	private void getNext(String pattern, int next[]) {
+		int j = 0;
+		int k = -1;
+		int len = pattern.length();
+		next[0] = -1;
+ 
+		while (j < len - 1) {
+			if (k == -1 || pattern.charAt(k) == pattern.charAt(j)) {
+ 
+				j++;
+				k++;
+				next[j] = k;
+			} else {
+ 
+				// 比较到第K个字符，说明p[0——k-1]字符串和p[j-k——j-1]字符串相等，而next[k]表示
+				// p[0——k-1]的前缀和后缀的最长共有长度，所以接下来可以直接比较p[next[k]]和p[j]
+				k = next[k];
+			}
+		}
+ 
+	}
+ 
+	int kmp(String s, String pattern) {
+		int i = 0;
+		int j = 0;
+		int slen = s.length();
+		int plen = pattern.length();
+ 
+		int[] next = new int[plen];
+ 
+		getNext(pattern, next);
+ 
+		while (i < slen && j < plen) {
+ 
+			// 字符匹配，查找下一个字符
+			if (s.charAt(i) == pattern.charAt(j)) {
+				i++;
+				j++;
+			} else {
+				// 如果为-1说明pattern串要重头匹配
+				if (next[j] == -1) {
+					i++;
+					j = 0;
+				} else {
+					j = next[j];
+				}
+ 
+			}
+			// 说明找到字符串了，返回所在位置
+			if (j == plen) {
+				return i - j;
+			}
+		}
+		return -1;
+	}
+~~~
+### LeetCode30. Substring with Concatenation of All Words
+给定一个字符串和一组词，词的长度都一样，找到S子串包含，将word数组中的所有组合，每个词只能用一次
+~~~
+Example 1:
+
+Input:
+  s = "barfoothefoobarman",
+  words = ["foo","bar"]
+Output: [0,9]
+Explanation: Substrings starting at index 0 and 9 are "barfoor" and "foobar" respectively.
+The output order does not matter, returning [9,0] is fine too.
+Example 2:
+
+Input:
+  s = "wordgoodgoodgoodbestword",
+  words = ["word","good","best","word"]
+Output: []
+~~~
+~~~
+public static List<Integer> findSubstring(String S, String[] L) {
+    List<Integer> res = new ArrayList<Integer>();
+    if (S == null || L == null || L.length == 0) return res;
+    int len = L[0].length(); // length of each word
+    
+    Map<String, Integer> map = new HashMap<String, Integer>(); // map for L
+    for (String w : L) map.put(w, map.containsKey(w) ? map.get(w) + 1 : 1);
+    
+    for (int i = 0; i <= S.length() - len * L.length; i++) {
+        Map<String, Integer> copy = new HashMap<String, Integer>(map);
+        for (int j = 0; j < L.length; j++) { // checkc if match
+            String str = S.substring(i + j*len, i + j*len + len); // next word
+            if (copy.containsKey(str)) { // is in remaining words
+                int count = copy.get(str);
+                if (count == 1) copy.remove(str);
+                else copy.put(str, count - 1);
+                if (copy.isEmpty()) { // matches
+                    res.add(i);
+                    break;
+                }
+            } else break; // not in L
+        }
+    }
+    return res;
+}
+~~~
 ### LeetCode2. Add Two Numbers
 ~~~
     public ListNode addTwoNumbers(ListNode l1, ListNode l2) {
@@ -125,6 +261,129 @@ public List<List<Integer>> fourSum(int[] num, int target) {
         return sentinel.next;
     }
 ~~~
+### LeetCode32. Longest Valid Parentheses
+给定一个链表，和一个值x，切分该链表，使得小于x以及本来就在x前面的值都在x前面
+~~~
+Input: head = 1->4->3->2->5->2, x = 3
+Output: 1->2->2->4->3->5
+~~~
+解法：基本思想是建立两个队列，一个存储小于x的，一个保存剩余元素，最后要将第二个队列置为0，防止死循环
+~~~
+public ListNode partition(ListNode head, int x) {
+    ListNode dummy1 = new ListNode(0), dummy2 = new ListNode(0);  //dummy heads of the 1st and 2nd queues
+    ListNode curr1 = dummy1, curr2 = dummy2;      //current tails of the two queues;
+    while (head!=null){
+        if (head.val<x) {
+            curr1.next = head;
+            curr1 = head;
+        }else {
+            curr2.next = head;
+            curr2 = head;
+        }
+        head = head.next;
+    }
+    curr2.next = null;          //important! avoid cycle in linked list. otherwise u will get TLE.
+    curr1.next = dummy2.next;
+    return dummy1.next;
+}
+~~~
+### LeetCode21. Merge Two Sorted Lists归并链表
+~~~
+public ListNode mergeTwoLists(ListNode l1, ListNode l2){
+		if(l1 == null) return l2;
+		if(l2 == null) return l1;
+		if(l1.val < l2.val){
+			l1.next = mergeTwoLists(l1.next, l2);
+			return l1;
+		} else{
+			l2.next = mergeTwoLists(l1, l2.next);
+			return l2;
+		}
+}
+~~~
+### LeetCode23. Merge k Sorted Lists归并K个有序的链表
+~~~
+Input:
+[
+  1->4->5,
+  1->3->4,
+  2->6
+]
+Output: 1->1->2->3->4->4->5->6
+~~~
+题解：使用优先队列，先将每个链表的头部放入优先队列，之后每次取出一个同时更新链表
+~~~
+    public ListNode mergeKLists(ListNode[] lists) {
+        if (lists==null || lists.length==0) return null;
+        
+        PriorityQueue<ListNode> queue= new PriorityQueue<ListNode>(lists.length, (a,b)-> a.val-b.val);
+        
+        ListNode dummy = new ListNode(0);
+        ListNode tail=dummy;
+        
+        for (ListNode node:lists)
+            if (node!=null)
+                queue.add(node);
+            
+        while (!queue.isEmpty()){
+            tail.next=queue.poll();
+            tail=tail.next;
+            
+            if (tail.next!=null)
+                queue.add(tail.next);
+        }
+        return dummy.next;
+    }
+~~~
+### LeetCode24. Swap Nodes in Pairs
+给定链表，交换相邻两个链表元素
+~~~
+Given 1->2->3->4, you should return the list as 2->1->4->3.
+~~~
+题解：因为返回的是交换之后的头部，可以用递归
+~~~
+    public ListNode swapPairs(ListNode head) {
+        if(head==null || head.next==null) return head;
+        ListNode l1 = head.next;
+        head.next = swapPairs(head.next.next);
+        l1.next = head;
+        return l1;
+    }
+~~~
+### LeetCode25. Reverse Nodes in k-Group交换相邻的K个链表元素
+给定一个链表，每次交换K个元素，返回调整后的结果
+~~~
+Given this linked list: 1->2->3->4->5
+
+For k = 2, you should return: 2->1->4->3->5
+
+For k = 3, you should return: 3->2->1->4->5
+~~~
+题解：
+~~~
+public ListNode reverseKGroup(ListNode head, int k) {
+    ListNode curr = head;
+    int count = 0;
+    while (curr != null && count != k) { // 找到第k+1个节点
+        curr = curr.next;
+        count++;
+    }
+    if (count == k) { // 如果k+1节点存在 
+        curr = reverseKGroup(curr, k); // reverse list with k+1 node as head
+        // head - 原始头结点
+        // curr - 反转之后的头结点
+        while (count-- > 0) { // 反转前面的K个节点
+            ListNode tmp = head.next; // tmp - next head in direct part
+            head.next = curr; // preappending "direct" head to the reversed list 
+            curr = head; // move head of reversed part to a new node
+            head = tmp; // move "direct" head to the next node in direct part
+        }
+        head = curr;
+    }
+    return head;
+}
+~~~
+
 ### LeetCode3. Longest Substring Without Repeating Characters
 ~~~
     public int lengthOfLongestSubstring(String s) {
@@ -547,4 +806,337 @@ public class Solution {
         }
         return max;
     }
+~~~
+### LeetCode42. Trapping Rain Water收集雨水
+解法：单调栈
+  我们对低洼的地方感兴趣，就可以使用一个单调递减栈，将递减的边界存进去，一旦发现当前的数字大于栈顶元素了，那么就有可能会有能装水的地方产生。此时我们当前的数字是右边界，我们从栈中至少需要有两个数字，才能形成一个坑槽，先取出的那个最小的数字，就是坑槽的最低点，再次取出的数字就是左边界，我们比较左右边界，取其中较小的值为装水的边界，然后此高度减去水槽最低点的高度，乘以左右边界间的距离就是装水量了。由于需要知道左右边界的位置，所以我们虽然维护的是递减栈，但是栈中数字并不是存递减的高度，而是递减的高度的坐标。
+~~~
+  public int trap(int[] height) {
+      Stack<Integer> s = new Stack<Integer>();
+      int i = 0, n = height.length, res = 0;
+      while (i < n) {
+          if (s.isEmpty() || height[i] <= height[s.peek()]) {
+              s.push(i++);
+          } else {
+              int t = s.pop();
+              if (s.isEmpty()) continue;
+              res += (Math.min(height[i], height[s.peek()]) - height[t]) * (i - s.peek() - 1);
+          }
+      }
+      return res;
+  }
+~~~
+### LeetCode14. Longest Common Prefix
+找出最长公共前缀串，如果没有就输出`""`
+~~~
+    public String longestCommonPrefix(String[] strs) {
+        StringBuilder result = new StringBuilder();
+        
+        if (strs!= null && strs.length > 0){
+        
+            Arrays.sort(strs);
+            
+            char [] a = strs[0].toCharArray();
+            char [] b = strs[strs.length-1].toCharArray();
+            
+            for (int i = 0; i < a.length; i ++){
+                if (b.length > i && b[i] == a[i]){
+                    result.append(b[i]);
+                }
+                else {
+                    return result.toString();
+                }
+            }
+        return result.toString();
+    }
+~~~
+### LeetCode146. LRU Cache
+~~~
+Example:
+
+LRUCache cache = new LRUCache( 2 /* capacity */ );
+
+cache.put(1, 1);
+cache.put(2, 2);
+cache.get(1);       // returns 1
+cache.put(3, 3);    // evicts key 2
+cache.get(2);       // returns -1 (not found)
+cache.put(4, 4);    // evicts key 1
+cache.get(1);       // returns -1 (not found)
+cache.get(3);       // returns 3
+cache.get(4);       // returns 4
+~~~
+~~~
+class LRUCache {
+    
+    class Node{
+        int key;
+        int value;
+        Node pre;
+        Node next;
+        public Node(int key,int value){
+            this.key = key;
+            this.value = value;
+        }
+    }
+    private HashMap<Integer,Node> map;
+    private Node head,tail;
+    private int capacity;
+    private int count;
+
+    public LRUCache(int capacity) {
+        this.map = new HashMap();
+        this.capacity = capacity;
+        head = new Node(0,0);
+        tail = new Node(0,0);
+        head.next = tail;
+        head.next.pre = head;
+        head.pre = null;
+        tail.next = null;
+    }
+    
+    private void insertTohead(Node node){
+        Node second = this.head.next;
+        head.next = node;
+        node.pre = head;
+        second.pre = node;
+        node.next = second;
+    }
+    
+    private void removeFromtail(){
+        Node temp = this.tail.pre;
+        temp.pre.next = this.tail;
+        temp.pre = null;
+        this.tail.pre = temp;
+    }
+    
+    private void removeNode(Node node){
+        Node pre = node.pre;
+        Node next = node.next;
+        node.next = null;
+        node.pre = null;
+        pre.next = next;
+        next.pre = pre;
+    }
+    
+    public int get(int key) {
+        if(map.containsKey(key)){
+            Node node = map.get(key);
+            int value = node.value;
+            removeNode(node);
+            insertTohead(node);
+            return value;
+        }
+        return -1;
+    }
+    
+    public void put(int key, int value) {
+        if(map.containsKey(key)){
+            Node node = map.get(key);
+            removeNode(node);
+            node.value = value;
+            node.key = key;
+            insertTohead(node);
+            map.put(key,node);
+        }else{
+            Node node = new Node(key,value);
+            map.put(key,node);
+            if(count<this.capacity){
+                count++;
+                insertTohead(node);
+                
+            }
+            else{
+                map.remove(this.tail.pre.key);
+                removeNode(this.tail.pre);
+                insertTohead(node);
+            }
+        }
+    }
+}
+~~~
+### LeetCode19. Remove Nth Node From End of List移除倒数第N个链表节点
+使用双指针
+~~~
+public ListNode removeNthFromEnd(ListNode head, int n) {
+    
+    ListNode start = new ListNode(0);
+    ListNode slow = start, fast = start;
+    slow.next = head;
+    
+    //Move fast in front so that the gap between slow and fast becomes n
+    for(int i=1; i<=n+1; i++)   {
+        fast = fast.next;
+    }
+    //Move fast to the end, maintaining the gap
+    while(fast != null) {
+        slow = slow.next;
+        fast = fast.next;
+    }
+    //Skip the desired node
+    slow.next = slow.next.next;
+    return start.next;
+}
+~~~
+### LeetCode20. Valid Parentheses有效的括号
+~~~
+public boolean isValid(String s) {
+	Stack<Character> stack = new Stack<Character>();
+	for (char c : s.toCharArray()) {
+		if (c == '(')
+			stack.push(')');
+		else if (c == '{')
+			stack.push('}');
+		else if (c == '[')
+			stack.push(']');
+		else if (stack.isEmpty() || stack.pop() != c)
+			return false;
+	}
+	return stack.isEmpty();
+}
+~~~
+### LeetCode22. Generate Parentheses
+给定n对括号，写一个函数生成所有有效括号组合
+比如给定n=3，结果为
+~~~
+[
+  "((()))",
+  "(()())",
+  "(())()",
+  "()(())",
+  "()()()"
+]
+~~~
+~~~
+public List<String> generateParenthesis(int n) {
+    List<String> list = new ArrayList<String>();
+    generateOneByOne("", list, n, n);
+    return list;
+}
+public void generateOneByOne(String sublist, List<String> list, int left, int right){
+    if(left > right){ //因为每次都是先增加左括号，所以要求left一定比right小
+        return;
+    }
+    if(left > 0){
+        generateOneByOne( sublist + "(" , list, left-1, right);
+    }
+    if(right > 0){
+        generateOneByOne( sublist + ")" , list, left, right-1);
+    }
+    if(left == 0 && right == 0){
+        list.add(sublist);
+        return;
+    }
+}
+~~~
+### LeetCode32. Longest Valid Parentheses
+给定一个字符串只包含`(`和`)`，找出最长的有效子串
+解法：使用单调栈的思想
+~~~
+    public int longestValidParentheses(String s) {
+        int len = s.length();
+        if(s.length()==0) return 0;
+        int res = 0;
+        Stack<Integer> stack = new Stack<>();
+        for(int i=0;i<len;i++)
+        {
+            if(s.charAt(i)==')'&& !stack.empty() && s.charAt(stack.peek())=='(')
+            {
+                stack.pop();
+                if(stack.empty()) res = i+1;
+                else res = Math.max(res,i-stack.peek());
+            }
+            else
+                stack.push(i);
+        }
+        return res;
+    }
+~~~
+### LeetCode131. Palindrome Partitioning
+给定字符串，分割字符串使得所有部分都为回文串，返回所有结果
+~~~
+Input: "aab"
+Output:
+[
+  ["aa","b"],
+  ["a","a","b"]
+]
+~~~
+~~~
+    public List<List<String>> partition(String s) {
+        List<List<String>> res = new LinkedList<>();
+        if(s==null||s.length()==0) return res;
+        List<String> part = new LinkedList<>();
+        search(s,0,res,part);
+        return res;
+        
+    }
+    
+    private void search(String s,int index,List<List<String>> res,List<String> part){
+        if(index==s.length()){
+            res.add(new LinkedList(part));
+            return;
+        }
+        for(int i=index+1;i<=s.length();i++){
+            String str = s.substring(index,i);
+            if(isValid(str)){
+                part.add(str);
+                search(s,i,res,part);
+                part.remove(part.size()-1);
+            }
+        }
+        return;
+    }
+    
+    private boolean isValid(String str){
+        char[] ch = str.toCharArray();
+        int left = 0;
+        int right = ch.length-1;
+        while(left<=right){
+            if(ch[left]!=ch[right]){
+                return false;
+            }
+            left++;
+            right--;
+        }
+        return true;
+    }
+~~~
+### LeetCode132. Palindrome Partitioning II
+给定字符串，找出最小分割次数，使得所有部分都为回文串
+~~~
+Input: "aab"
+Output: 1
+Explanation: The palindrome partitioning ["aa","b"] could be produced using 1 cut.
+~~~
+解法：
+这里需要两个DP数组，cut数组记录最小分割次数，pal数组记录在[j,i]之间是否是回文串
+DP1 如果[j,i]是回文串，只需要cut[i] = cut[j - 1] + 1 (j <= i)
+DP2 如果[j,i]是回文串，[j + 1, i - 1]也是回文串，同时c[j] == c[i]
+~~~
+a   b   a   |   c  c
+                j  i
+       j-1  |  [j, i] is palindrome
+   cut(j-1) +  1
+~~~
+
+~~~
+public int minCut(String s) {
+     boolean[][] isPalindr = new boolean[n + 1][n + 1]; //isPalindr[i][j] = true means s[i:j) is a valid palindrome
+     int[] dp = new int[n + 1]; //dp[i] means the minCut for s[0:i) to be partitioned 
+
+     for(int i = 0; i <= n; i++) dp[i] = i - 1;//initialize the value for each dp state.
+     
+     for(int i = 2; i <= n; i++){
+         for(int j = i - 1; j >= 0; j--){//i从前往后遍历，j从后往前遍历
+             //if(isPalindr[j][i]){
+             if(s.charAt(i - 1) == s.charAt(j) && (i - 1 - j < 2 || isPalindr[j + 1][i - 1])){
+                 isPalindr[j][i] = true;
+                 dp[i] = Math.min(dp[i], dp[j] + 1);
+             }
+         }
+     }
+     
+     return dp[n];
+}
 ~~~
