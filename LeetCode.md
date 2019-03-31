@@ -1337,7 +1337,141 @@ public class Solution {
         return false;
     }
 ~~~
+### LeetCode207. Course Schedule课程调度
+**重点：**还是有向图环的检测
+先建立好有向图，然后从第一个门课开始，找其可构成哪门课，暂时将当前课程标记为已访问，然后对新得到的课程调用DFS递归，直到出现新的课程已经访问过了，则返回false，没有冲突的话返回true，然后把标记为已访问的课程改为未访问。
+~~~
+    public boolean canFinish(int numCourses, int[][] prerequisites) {
+        if(numCourses<=0) return false;
+        ArrayList<Integer>[] graph = new ArrayList[numCourses];
+        for(int i=0;i<graph.length;i++){
+            graph[i] = new ArrayList<Integer>();
+        }
+        // int[] degree = new int[numCourses];
+        for(int i=0;i<prerequisites.length;i++){
+            // degree[prerequisites[i][1]]++;
+            graph[prerequisites[i][1]].add(prerequisites[i][0]);
+        }
+        boolean[] visit = new boolean[numCourses];
+        for(int i=0;i<numCourses;i++){
+            if(!dfs(graph,visit,i))
+                return false;
+        }
+        return true;
+    }
+    
+    private boolean dfs(ArrayList<Integer>[] graph,boolean[] visit,int course ){
+        if(visit[course]) return false;
+        else visit[course] = true;
+        for(int i=0;i<graph[course].size();i++){
+            if(!dfs(graph,visit,graph[course].get(i)))
+                return false;
+        }
+        
+        visit[course] = false;
+        return true;
+    }
+~~~
+### LeetCode210. Course Schedule II
+题解：这道题还需要计算所有课程的入度，从入读为0的课程开始遍历，将课程放入queue中，依次将该课程的下级课程入度减一，如果该课程入度为0，就添加进queue
+最终若有向图中有环，则结果中元素的个数不等于总课程数，那我们将结果清空即可
+~~~
+    public int[] findOrder(int numCourses, int[][] prerequisites) {
+        ArrayList<Integer> res = new ArrayList<>();
+        int[] indegree = new int[numCourses];
+        ArrayList<Integer>[] graph = new ArrayList[numCourses];
+        for(int i=0;i<numCourses;i++){
+            graph[i] = new ArrayList<Integer>();
+        }
+        for(int[] depend:prerequisites){
+            indegree[depend[0]]++;	//计算入度
+            graph[depend[1]].add(depend[0]);
+        }
+        Queue<Integer> queue = new LinkedList<>();
+        for(int i=0;i<indegree.length;i++){
+            if(indegree[i]==0) queue.offer(i);
+        }
+        
+        while(!queue.isEmpty()){
+            int course = queue.poll();
+            res.add(course);
+            for(int i=0;i<graph[course].size();i++){
+                if(--indegree[graph[course].get(i)]==0){	//如果入度为0，就加入queue
+                    queue.offer(graph[course].get(i));
+                }
+            }
+        }
+        
+        int[] ans = new int[numCourses];
+        if(res.size()!=numCourses) return new int[0];//如果最后结果内的课程数目不等于课程总个数，说明有环
+        for(int i=0;i<res.size();i++){
+            ans[i] = res.get(i);
+        }
+        return ans;
+    }
+~~~
+### 编程之美3.8：求二叉树中节点的最大距离
+二叉树中节点的最大距离必定是两个叶子节点的距离。求某个子树的节点的最大距离，有三种情况：
+1. 两个叶子节点都出现在左子树；
+2. 两个叶子节点都出现在右子树；
+3. 一个叶子节点在左子树，一个叶子节点在右子树。
+只要求得三种情况的最大值，结果就是这个子树的节点的最大距离。
+~~~
+private int height(TreeNode root){
+	if(root==null) return 0;
+	return Math.max(height(root.left),height(root.right))+1;
+}
 
+public int findMaxDis(TreeNode root){
+	if(root==null) return 0;
+	int leftMax = findMaxDis(root.left);
+	int rightMax = findMax(root.right);
+	return Math.max(Math.max(leftMax,rightMax),height(root.left)+height(root.right));
+}
+~~~
+### LeetCode124. Binary Tree Maximum Path Sum
+给定一棵树，找到最大的节点路径和，路径是指一条直线，不能分叉，不一定是从根节点或者叶子节点开始，可以是任意节点
+~~~
+Example 1:
+
+Input: [1,2,3]
+
+       1
+      / \
+     2   3
+
+Output: 6
+Example 2:
+
+Input: [-10,9,20,null,null,15,7]
+
+   -10
+   / \
+  9  20
+    /  \
+   15   7
+
+Output: 42
+~~~
+题解：的递归函数返回值就可以定义为以当前结点为根结点，到叶节点的最大路径之和，然后全局路径最大值放在参数中，用结果res来表示。</br>
+在递归函数中，如果当前结点不存在，那么直接返回0。否则就分别对其左右子节点调用递归函数，`由于路径和有可能为负数`，而我们当然不希望加上负的路径和，所以我们和0相比，取较大的那个，`就是要么不加，加就要加正数`。然后我们来更新全局最大值结果res，就是`以左子结点为终点的最大path之和加上以右子结点为终点的最大path之和，还要加上当前结点值，这样就组成了一个条完整的路径`。而我们返回值是取left和right中的较大值加上当前结点值，因为我们返回值的定义是以当前结点为终点的path之和，所以只能取left和right中较大的那个值，而不是两个都要
+~~~
+    private int max;
+    
+    public int maxPathSum(TreeNode root) {
+        max = Integer.MIN_VALUE;
+        helper(root);
+        return max;
+    }
+    private int helper(TreeNode root)
+    {
+        if(root==null) return 0;
+        int left = Math.max(0,maxPathSum(root.left));
+        int right = Math.max(0,maxPathSum(root.right));
+        max = Math.max(max,left+right+root.val);
+        return Math.max(left+root.val,right+root.val);
+    }
+~~~
 ### LeetCode300. Longest Increasing Subsequence
 动态规划Dynamic Programming的解法，这种解法的时间复杂度为O(n2)，我们维护一个一维dp数组，其中dp[i]表示以nums[i]为结尾的最长递增子串的长度，对于每一个nums[i]，我们从第一个数再搜索到i，如果发现某个数小于nums[i]，我们更新dp[i]，更新方法为dp[i] = max(dp[i], dp[j] + 1)，即比较当前dp[i]的值和那个小于num[i]的数的dp值加1的大小，我们就这样不断的更新dp数组，到最后dp数组中最大的值就是我们要返回的LIS的长度</br>
 下面我们来看一种优化时间复杂度到O(nlgn)的解法，这里用到了二分查找法，所以才能加快运行时间。思路是，我们先建立一个数组ends，把首元素放进去，然后比较之后的元素，如果遍历到的新元素比ends数组中的首元素小的话，替换首元素为此新元素，如果遍历到的新元素比ends数组中的末尾元素还大的话，将此新元素添加到ends数组末尾(注意不覆盖原末尾元素)。如果遍历到的新元素比ends数组首元素大，比尾元素小时，此时用二分查找法找到**第一个不小于此新元素**的位置，覆盖掉位置的原来的数字，以此类推直至遍历完整个nums数组，此时ends数组的长度就是我们要求的LIS的长度，**特别注意的是ends数组的值可能不是一个真实的LIS**，比如若输入数组nums为{4, 2， 4， 5， 3， 7}，那么算完后的ends数组为{2， 3， 5， 7}，可以发现它不是一个原数组的LIS，只是长度相等而已，千万要注意这点。
