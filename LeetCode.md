@@ -1140,3 +1140,327 @@ public int minCut(String s) {
      return dp[n];
 }
 ~~~
+### LeetCode337. House Robber III
+小偷偷的是按照二叉树来偷，但是不会连着偷父子，只会偷爷爷和孙子，或者兄弟节点
+~~~
+Example 1:
+
+Input: [3,2,3,null,3,null,1]
+
+     3
+    / \
+   2   3
+    \   \ 
+     3   1
+
+Output: 7 
+Explanation: Maximum amount of money the thief can rob = 3 + 3 + 1 = 7.
+Example 2:
+
+Input: [3,4,5,1,3,null,1]
+
+     3
+    / \
+   4   5
+  / \   \ 
+ 1   3   1
+
+Output: 9
+Explanation: Maximum amount of money the thief can rob = 4 + 5 = 9.
+~~~
+题解：如果左孩子存在，计算出左孩子的左子节点的最大值，还有左孩子右子节点的最大值</br>
+如果右孩子存在，计算出右孩子的左子节点的最大值，还有右孩子右子节点的最大值</br>
+比较当前节点加上孙子节点和不算当前节点(只算当前节点的左右子节点的和)的最大值</br>
+为了防止溢出超时，采用HashMap保存当前节点的最大值
+~~~
+public class Solution {
+    public int rob(TreeNode root) {
+        if(root==null) return 0;
+        if(root.left==null&&root.right==null) return root.val;
+        
+        int left=0, right=0;
+        int subleft=0, subright=0;
+    
+    if(root.left!=null){
+        left=rob(root.left);
+        subleft=rob(root.left.left)+rob(root.left.right);
+    }
+    
+    if(root.right!=null){
+        right=rob(root.right);
+        subright=rob(root.right.left)+rob(root.right.right);
+    }
+    
+    int sum1=left+right;
+    int sum2=subleft+subright+root.val;
+    
+    return (sum1>sum2)?sum1:sum2;
+}
+~~~
+### LeetCode172. Factorial Trailing Zeroes
+找出阶乘N！结果中的0的个数
+题解：让求一个数的阶乘末尾0的个数，也就是要找乘数中10的个数，而10可分解为2和5，而我们可知2的数量又远大于5的数量，那么此题即便为找出5的个数。仍需注意的一点就是，像25,125，这样的不只含有一个5的数字需要考虑进去。
+~~~
+    public int trailingZeroes(int n) {
+        int res = 0;
+        while (n > 0) {
+            res += n / 5;
+            n /= 5;
+        }
+        return res;
+    }
+~~~
+### LeetCode235. Lowest Common Ancestor of a Binary Search Tree二叉搜索树的最低公共祖先
+题解：根据二叉搜索树的性质</br>
+如果根节点的值大于p和q之间的较大值，说明p和q都在左子树中，那么此时我们就进入根节点的左子节点继续递归</br>
+如果根节点小于p和q之间的较小值，说明p和q都在右子树中，那么此时我们就进入根节点的右子节点继续递归</br>
+如果都不是，则说明当前根节点就是最小共同父节点，直接返回即可
+~~~
+public class Solution {
+    public TreeNode lowestCommonAncestor(TreeNode root, TreeNode p, TreeNode q) {
+        if(root.val > p.val && root.val > q.val){
+            return lowestCommonAncestor(root.left, p, q);
+        }else if(root.val < p.val && root.val < q.val){
+            return lowestCommonAncestor(root.right, p, q);
+        }else{
+            return root;
+        }
+    }
+}
+~~~
+### LeetCode235. Lowest Common Ancestor of a Binary Search Tree搜索普通二叉树的最低公共祖先
+图：
+~~~
+Example 1:
+
+Input: root = [3,5,1,6,2,0,8,null,null,7,4], p = 5, q = 1
+Output: 3
+Explanation: The LCA of nodes 5 and 1 is 3.
+Example 2:
+
+Input: root = [3,5,1,6,2,0,8,null,null,7,4], p = 5, q = 4
+Output: 5
+Explanation: The LCA of nodes 5 and 4 is 5, since a node can be a descendant of itself according to the LCA definition.
+~~~
+题解：
+1. 首先关注递归返回条件
+   在递归函数中，我们首先看当前结点是否为空，若为空则直接返回空，若为p或q中的任意一个，也直接返回当前结点。
+2. 否则的话就对其左右子结点分别调用递归函数，由于这道题限制了p和q一定都在二叉树中存在，那么如果当前结点不等于p或q，p和q要么分别位于左右子树中，要么同时位于左子树，或者同时位于右子树，那么我们分别来讨论：
+- 若p和q要么分别位于左右子树中，那么对左右子结点调用递归函数，会分别返回p和q结点的位置，而当前结点正好就是p和q的最小共同父结点，直接返回当前结点即可，这就是题目中的例子1的情况。
+- 若p和q同时位于左子树，这里有两种情况，一种情况是left会返回p和q中较高的那个位置，而right会返回空，所以我们最终返回非空的left即可，这就是题目中的例子2的情况。还有一种情况是会返回p和q的最小父结点，就是说当前结点的左子树中的某个结点才是p和q的最小父结点，会被返回。
+- 若p和q同时位于右子树，同样这里有两种情况，一种情况是right会返回p和q中较高的那个位置，而left会返回空，所以我们最终返回非空的right即可，还有一种情况是会返回p和q的最小父结点，就是说当前结点的右子树中的某个结点才是p和q的最小父结点，会被返回
+~~~
+public class Solution {
+    public TreeNode lowestCommonAncestor(TreeNode root, TreeNode p, TreeNode q) {
+        if(root == null || root == p || root == q)  return root;
+        TreeNode left = lowestCommonAncestor(root.left, p, q);
+        TreeNode right = lowestCommonAncestor(root.right, p, q);
+        if(left != null && right != null)   return root;
+        return left != null ? left : right;
+    }
+}
+~~~
+### LeetCode136. Single Number
+只有一个数出现了一次，其他都出现两次
+~~~
+public int singleNumber(int[] nums) {
+    int ans =0;
+    
+    int len = nums.length;
+    for(int i=0;i!=len;i++)
+        ans ^= nums[i];
+    
+    return ans;
+    
+}
+~~~
+### LeetCode137. Single Number II
+只有一个数出现了一次，其他都出现了三次
+题解：我们可以建立一个32位的数字，来统计每一位上1出现的个数，我们知道如果某一位上为1的话，那么如果该整数出现了三次，对3去余为0，我们把每个数的对应位都加起来对3取余，最终剩下来的那个数就是单独的数字。
+~~~
+public int singleNumber(int[] nums) {
+    int ans = 0;
+    for(int i = 0; i < 32; i++) {
+        int sum = 0;
+        for(int j = 0; j < nums.length; j++) {
+            if(((nums[j] >> i) & 1) == 1) {
+                sum++;
+                sum %= 3;
+            }
+        }
+        if(sum != 0) {
+            ans |= sum << i;
+        }
+    }
+    return ans;
+}
+~~~
+### LeetCode260. Single Number III
+有两个数出现了一次，其他数都出现两次
+题解：能想办法把原数组分为两个小数组，不相同的两个数字分别在两个小数组中，这样分别调用 Single Number 的解法就可以得到答案。</br>
+首先我们先把原数组全部异或起来，那么我们会得到一个数字，这个数字是两个不相同的数字异或的结果，我们取出其中任意一位为‘1’的位，为了方便起见，我们用 a &= -a 来取出最右端为‘1’的位,通过这一位分为两组，组内亦或
+~~~
+public class Solution {
+    public int[] singleNumber(int[] nums) {
+        int diff = 0;
+        for (int num : nums) {
+            diff ^= num;
+        }
+        // 获得最右一位的1
+        diff &= -diff;
+        
+        // Pass 2 :
+        int[] rets = {0, 0}; // 这个数组用来存储最后的结果
+        for (int num : nums)
+        {
+            if ((num & diff) == 0) // 如果这个数该位不为1
+            {
+                rets[0] ^= num;
+            }
+            else // the bit is set
+            {
+                rets[1] ^= num;
+            }
+        }
+        return rets;
+    }
+}
+~~~
+### LeetCode217. Contains Duplicate整型数组是否有重复
+~~~
+    public boolean containsDuplicate(int[] nums) {
+        if(nums.length<=1) return false;
+        Arrays.sort(nums);
+        for(int i=1;i<nums.length;i++){
+            if(nums[i]==nums[i-1]) return true;
+        }
+        return false;
+    }
+~~~
+
+### LeetCode300. Longest Increasing Subsequence
+动态规划Dynamic Programming的解法，这种解法的时间复杂度为O(n2)，我们维护一个一维dp数组，其中dp[i]表示以nums[i]为结尾的最长递增子串的长度，对于每一个nums[i]，我们从第一个数再搜索到i，如果发现某个数小于nums[i]，我们更新dp[i]，更新方法为dp[i] = max(dp[i], dp[j] + 1)，即比较当前dp[i]的值和那个小于num[i]的数的dp值加1的大小，我们就这样不断的更新dp数组，到最后dp数组中最大的值就是我们要返回的LIS的长度</br>
+下面我们来看一种优化时间复杂度到O(nlgn)的解法，这里用到了二分查找法，所以才能加快运行时间。思路是，我们先建立一个数组ends，把首元素放进去，然后比较之后的元素，如果遍历到的新元素比ends数组中的首元素小的话，替换首元素为此新元素，如果遍历到的新元素比ends数组中的末尾元素还大的话，将此新元素添加到ends数组末尾(注意不覆盖原末尾元素)。如果遍历到的新元素比ends数组首元素大，比尾元素小时，此时用二分查找法找到**第一个不小于此新元素**的位置，覆盖掉位置的原来的数字，以此类推直至遍历完整个nums数组，此时ends数组的长度就是我们要求的LIS的长度，**特别注意的是ends数组的值可能不是一个真实的LIS**，比如若输入数组nums为{4, 2， 4， 5， 3， 7}，那么算完后的ends数组为{2， 3， 5， 7}，可以发现它不是一个原数组的LIS，只是长度相等而已，千万要注意这点。
+~~~
+public int lengthOfLIS(int[] nums) {
+    int[] tails = new int[nums.length];
+    int size = 0;
+    for (int x : nums) {
+        int i = 0, j = size;
+        while (i != j) {
+            int m = (i + j) / 2;
+            if (tails[m] < x)
+                i = m + 1;//这是左闭右闭的区间，i先加1，所有i会停在大的地方
+            else
+                j = m;
+        }
+        tails[i] = x;
+        if (i == size) ++size;//说明比最大的还要大，size++
+    }
+    return size;
+}
+~~~
+### LeetCode301. Remove Invalid Parentheses
+移除无效的字符串
+题解：
+- 如果合法的括号，左括号和右括号的数量应该是相等的，先计算左右括号应该删除的数目
+- 深度递归搜索：
+   - 如果是左括号：
+	    - 去除这个左括号，就将rml-1
+			- 不去除这个左括号，就rml不变，open+1
+	 - 如果是右括号：
+	    - 去除这个右括号，就将rmR-1
+			- 不去除这个右括号，就rml不变，open-1，代表闭合了
+	 - 如果是普通字符，就自动i+1
+~~~
+public List<String> removeInvalidParentheses(String s) {
+    int rmL = 0, rmR = 0;
+    for (int i = 0; i < s.length(); i++) {
+        if (s.charAt(i) == '(') {
+            rmL++;
+        } else if (s.charAt(i) == ')') {
+            if (rmL != 0) {
+                rmL--;
+            } else {
+                rmR++;
+            }
+        }
+    }
+    Set<String> res = new HashSet<>();
+    dfs(s, 0, res, new StringBuilder(), rmL, rmR, 0);
+    return new ArrayList<String>(res);
+}
+
+public void dfs(String s, int i, Set<String> res, StringBuilder sb, int rmL, int rmR, int open) {
+    if (rmL < 0 || rmR < 0 || open < 0) {
+        return;
+    }
+    if (i == s.length()) {
+        if (rmL == 0 && rmR == 0 && open == 0) {
+            res.add(sb.toString());
+        }        
+        return;
+    }
+
+    char c = s.charAt(i); 
+    int len = sb.length();
+
+    if (c == '(') {
+        dfs(s, i + 1, res, sb, rmL - 1, rmR, open);		    // 不使用 (
+    	dfs(s, i + 1, res, sb.append(c), rmL, rmR, open + 1);       // 使用 (
+
+    } else if (c == ')') {
+        dfs(s, i + 1, res, sb, rmL, rmR - 1, open);	            // 不使用  )
+    	dfs(s, i + 1, res, sb.append(c), rmL, rmR, open - 1);  	    // 使用 )
+
+    } else {
+        dfs(s, i + 1, res, sb.append(c), rmL, rmR, open);	
+    }
+
+    sb.setLength(len);        
+}
+~~~
+### LeetCode303. Range Sum Query - Immutable
+给定数组，找到在指定索引之内的数的和
+题解：初始化的时候计算所有的和，返回的时候直接区间相减
+~~~
+public class NumArray {
+	int[] nums;
+
+	public NumArray(int[] nums) {
+			for(int i = 1; i < nums.length; i++)
+					nums[i] += nums[i - 1];
+
+			this.nums = nums;
+	}
+
+	public int sumRange(int i, int j) {
+			if(i == 0)
+					return nums[j];
+
+			return nums[j] - nums[i - 1];
+	}
+}
+~~~
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
