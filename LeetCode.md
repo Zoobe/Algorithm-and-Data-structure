@@ -955,6 +955,76 @@ class LRUCache {
     }
 }
 ~~~
+### LeetCode146. LFU Cache
+~~~
+class LFUCache {
+    HashMap<Integer, Integer> vals;
+    HashMap<Integer, Integer> counts;
+    HashMap<Integer, LinkedHashSet<Integer>> lists;
+    int cap;
+    int min;
+    
+    public LFUCache(int capacity) {
+        vals = new HashMap<>();
+        counts = new HashMap<>();
+        lists = new HashMap<>();
+        cap = capacity;
+        min = 0;
+    }
+    
+    public int get(int key) {
+        if(!vals.containsKey(key))
+            return -1;
+        
+        update(key);
+        return vals.get(key);
+    }
+    
+    private void update (int key) {
+        int cnt = counts.get(key);
+        counts.put(key, cnt + 1);
+        lists.get(cnt).remove(key);
+        
+        if(cnt == min && lists.get(cnt).size() == 0)
+            min++;
+        
+        addToList(cnt + 1, key);
+    }
+    
+    private void addToList(int cnt, int key) {
+        if(!lists.containsKey(cnt))
+            lists.put(cnt, new LinkedHashSet<>());
+        
+        lists.get(cnt).add(key);
+    }
+    
+    private void evict () {
+        int key = lists.get(min).iterator().next(); 
+        lists.get(min).remove(key);
+        vals.remove(key);
+        counts.remove(key);
+    }
+    
+    public void put(int key, int value) {
+        if (cap <= 0)
+            return;
+        
+        if (vals.containsKey(key)) {
+            vals.put(key, value);
+            update(key);
+            return;
+        } 
+        
+        if (vals.size() >= cap) 
+            evict();
+        
+        vals.put(key, value);
+        counts.put(key, 1);
+        addToList(1, key);
+        min = 1;
+    }
+}
+~~~
 ### LeetCode19. Remove Nth Node From End of List移除倒数第N个链表节点
 使用双指针
 ~~~
@@ -1575,6 +1645,249 @@ public class NumArray {
 			return nums[j] - nums[i - 1];
 	}
 }
+~~~
+### 手写线程池
+~~~
+/**
+ * 线程池方法定义
+ * @author hrabbit
+ */
+public interface ThreadPools<Job extends Runnable>{
+
+    /**
+     * 执行一个任务(Job),这个Job必须实现Runnable
+     * @param job
+     */
+    public void execute(Job job);
+
+    /**
+     * 关闭线程池
+     */
+    public void shutdown();
+
+    /**
+     * 增加工作者线程，即用来执行任务的线程
+     * @param num
+     */
+    public void addWorkers(int num);
+
+    /**
+     * 减少工作者线程
+     * @param num
+     */
+    public void removeWorker(int num);
+
+    /**
+     * 获取正在等待执行的任务数量
+     */
+    public int getJobSize();
+}
+
+线程池默认实现
+/**
+ * 线程池
+ * @param <Job>
+ * @author hrabbit
+ */
+public class DefaultThreadPool<Job extends Runnable> implements ThreadPools<Job>{
+    /**
+     * 线程池维护工作者线程的最大数量
+     */
+    private static final int MAX_WORKER_NUMBERS=30;
+
+    /**
+     * 线程池维护工作者线程的最默认工作数量
+     */
+    private static final int DEFAULT_WORKER_NUMBERS = 5;
+
+    /**
+     * 线程池维护工作者线程的最小数量
+     */
+    private static final int MIN_WORKER_NUMBERS = 1;
+
+    /**
+     * 维护一个工作列表,里面加入客户端发起的工作
+     */
+    private final LinkedList<Job> jobs = new LinkedList<Job>();
+
+    /**
+     * 工作者线程的列表
+     */
+    private final List<Worker> workers = Collections.synchronizedList(new ArrayList<Worker>());
+
+    /**
+     * 工作者线程的数量
+     */
+    private int workerNum;
+    /**
+     *每个工作者线程编号生成
+     */
+    private AtomicLong threadNum = new AtomicLong();
+
+    /**
+     * 第一步:构造函数，用于初始化线程池
+     * 首先判断初始化线程池的线程个数是否大于最大线程数，如果大于则线程池的默认初始化值为 DEFAULT_WORKER_NUMBERS
+     */
+    public DefaultThreadPool(int num){
+        if (num > MAX_WORKER_NUMBERS) {
+            this.workerNum =DEFAULT_WORKER_NUMBERS;
+        } else {
+            this.workerNum = num;
+        }
+        initializeWorkers(workerNum);
+    }
+
+    /**
+     * 初始化每个工作者线程
+     */
+    private void initializeWorkers(int num) {
+        for (int i = 0; i < num; i++) {
+            Worker worker = new Worker();
+            //添加到工作者线程的列表
+            workers.add(worker);
+            //启动工作者线程
+            Thread thread = new Thread(worker);
+            thread.start();
+        }
+    }
+
+    /**
+     * 执行一个任务(Job),这个Job必须实现Runnable
+     * @param job
+     */
+    @Override
+    public void execute(Job job) {
+        //如果job为null，抛出空指针
+        if (job==null){
+            throw new NullPointerException();
+        }
+        //这里进行执行 TODO 当供大于求时候，考虑如何临时添加线程数
+        if (job != null) {
+            //根据线程的"等待/通知机制"这里必须对jobs加锁
+            synchronized (jobs) {
+                jobs.addLast(job);
+                jobs.notify();
+            }
+        }
+
+    }
+
+    /**
+     * 关闭线程池
+     */
+    @Override
+    public void shutdown() {
+        for (Worker worker:workers) {
+            worker.shutdown();
+        }
+    }
+
+    /**
+     * 增加工作者线程，即用来执行任务的线程
+     * @param num
+     */
+    @Override
+    public void addWorkers(int num) {
+        //加锁，防止该线程还没增加完成而下个线程继续增加导致工作者线程超过最大值
+        synchronized (jobs) {
+            if (num + this.workerNum > MAX_WORKER_NUMBERS) {
+                num = MAX_WORKER_NUMBERS - this.workerNum;
+            }
+            initializeWorkers(num);
+            this.workerNum += num;
+        }
+    }
+
+    /**
+     * 减少工作者线程
+     * @param num
+     */
+    @Override
+    public void removeWorker(int num) {
+        synchronized (jobs) {
+            if(num>=this.workerNum){
+                throw new IllegalArgumentException("超过了已有的线程数量");
+            }
+            for (int i = 0; i < num; i++) {
+                Worker worker = workers.get(i);
+                if (worker != null) {
+                    //关闭该线程并从列表中移除
+                    worker.shutdown();
+                    workers.remove(i);
+                }
+            }
+            this.workerNum -= num;
+        }
+
+    }
+
+    /**
+     * 获取正在等待执行的任务数量
+     */
+    @Override
+    public int getJobSize() {
+        return workers.size();
+    }
+
+    /**
+     * 消费者
+     */
+    class Worker implements Runnable {
+        // 表示是否运行该worker
+        private volatile boolean running = true;
+
+        @Override
+        public void run() {
+            while (running) {
+                Job job = null;
+                //线程的等待/通知机制
+                synchronized (jobs) {
+                    if (jobs.isEmpty()) {
+                        try {
+                            jobs.wait();//线程等待唤醒
+                        } catch (InterruptedException e) {
+                            //感知到外部对该线程的中断操作，返回
+                            Thread.currentThread().interrupt();
+                            return;
+                        }
+                    }
+                    // 取出一个job
+                    job = jobs.removeFirst();
+                }
+                //执行job
+                if (job != null) {
+                    job.run();
+                }
+            }
+        }
+
+        /**
+         * 终止该线程
+         */
+        public void shutdown() {
+            running = false;
+        }
+    }
+
+}
+
+从线程池的实现中可以看出，当客户端调用execute(Job)方法时，会不断地向任务列表jobs中添加Job，而每个工作者线程会不读的从jobs上获取Job来执行，当jobs为空时，工作者线程进入WAITING状态。
+当添加一个Job后，对工作队列jobs调用其notify()方法来唤醒一个工作者线程。此处我们不调用notifyAll(),避免将等待队列中的线程全部移动到阻塞队列中而造成资源浪费。
+线程池的本质就是使用了一个线程安全的工作队列连接工作者线程和客户端线程。客户端线程把任务放入工作队列后便返回，而工作者线程则不端的从工作队列中取出工作并执行。当工作队列为空时，工作者线程进入WAITING状态，当有客户端发送任务过来后会通过任意一个工作者线程，随着大量任务的提交，更多的工作者线程被唤醒。
+Job实现
+public class Job implements Runnable{
+
+    @Override
+    public void run() {
+        try {
+            Thread.sleep(2500);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+        System.out.println("当前线程名称:"+Thread.currentThread().getName()+";"+"job被指执行了");
+    }
+}
+
 ~~~
 
 
