@@ -43,8 +43,22 @@ spark.sparkContext.register(accumulator,"SessionAggrStatAccumulator")
 ~~~
 3. 最后获得通过筛选的明细数据
 ### 五、用户随机抽取
-1. 计算出每天每小时的session数量
+1. 以时间为key的数据<yyyy-MM-dd_HH,aggrInfo>，通过`countByKey`计算出每天每小时的session数量返回的是<yyyy-MM-dd_HH,count>格式的map
+2. 将<yyyy-MM-dd_HH,count>格式的map，转换成<yyyy-MM-dd,<HH,count>>的格式
+3. 总共要抽取100个session，先按照天数，进行平分
+4. 首先计算当天内的所有数据的数量，然后计算每天每小时占用当天总量的比例再乘以采样数量，存入Map<String, List<Integer>>中
+5. 根据数量计算出应该提取的索引，如果随机数已经存在了，就while循环生成
+6. 对时间为key的数据进行`groupByKey`,得到<dateHour,(session aggrInfo)>格式的数据
+7. 对数据flatMap，外部用一个index作为索引，每次遍历的时候+1，当等于我们之前List里面数的时候，就将数据取出，放到返回的List里面
+8. 最后和原始数据进行join得到明细session数据
+### 计算各session范围占比，并写入MySQL
+通过前面的countbykey算子已经触发了action操作，所以拿到accumulator里面的值计算步长，时长占比，写入数据库
+	
 ### 六、获得Top10热门商品
+1. 将sessionid2detailRDD里面只要有点击，下单，支付的商品id都拿出来<id,id>的格式并去除重复
+2. 对数据中点击过的，下单的，支付过的都映射为<id,1>的格式，再进行reduceByKey，算出该种类商品的数量
+3. 进行左外连接，如果有值就拼接为一个大字符串“支付id=13|点击=25|下单=3”
+4. 将该字符串作为一个自定义排序，实现Ordered接口，之后进行二次排序
 ### 六、获得Top10热门session
 
 ## 流处理
@@ -159,9 +173,9 @@ j2ee系统每隔几秒钟，就从mysql中搂一次最新数据，每次都可�
 2. 对刚刚的DStream调用updateStateByKey算子，首先判断这个key是否已经存在，如果存在，就将这个key对应的值累加，并将key，value返回
 3. 将返回的值也就是统计出来的值写入到MySQL中
 ### 六、实时统计每天每个省份top3热门广告
-1. 将上一步得到的DStream的格式`<yyyyMMdd_province_city_adid, clickCount>`转换为`<yyyyMMdd_province_adid, clickCount>`的格式
+1. 将上一步得到的DStream的格式`<yyyyMMdd_province_city_adid, clickCount>`去掉城市的维度，转换为`<yyyyMMdd_province_adid, clickCount>`的格式
 2. 调用reduceByKey算子，计算出每天各省份各广告的点击量
-3. 目的是计算出每天各个省份的Top3广告，将上一步得到的RDD转换为Dataframe，注册为一张临时表，使用Spark SQL，通过开窗函数，获取到各省份的top3热门广告
+3. 目的是计算出每天各个省份的Top3广告，由于上面的是当天的有状态的统计量，将上一步得到的RDD转换为Dataframe，注册为一张临时表，使用Spark SQL，通过开窗函数，获取到各省份的top3热门广告
     - 将RDD映射为`Row(date, province, adid, clickCount)`格式
     - 通过RDD拿到SparkSession单例对象，注册一张临时表
       ~~~
