@@ -270,8 +270,8 @@ Output: 1->2->2->4->3->5
 解法：基本思想是建立两个队列，一个存储小于x的，一个保存剩余元素，最后要将第二个队列置为0，防止死循环
 ~~~
 public ListNode partition(ListNode head, int x) {
-    ListNode dummy1 = new ListNode(0), dummy2 = new ListNode(0);  //dummy heads of the 1st and 2nd queues
-    ListNode curr1 = dummy1, curr2 = dummy2;      //current tails of the two queues;
+    ListNode dummy1 = new ListNode(0), dummy2 = new ListNode(0);  //两个队列的虚拟头结点
+    ListNode curr1 = dummy1, curr2 = dummy2;      //两个队列的当前尾部
     while (head!=null){
         if (head.val<x) {
             curr1.next = head;
@@ -282,7 +282,7 @@ public ListNode partition(ListNode head, int x) {
         }
         head = head.next;
     }
-    curr2.next = null;          //important! avoid cycle in linked list. otherwise u will get TLE.
+    curr2.next = null;          //重要！！避免再链表中循环
     curr1.next = dummy2.next;
     return dummy1.next;
 }
@@ -850,6 +850,191 @@ public class Solution {
         return result.toString();
     }
 ~~~
+### LeetCode139. Word Break
+给定非空字符串`s`和非空字典`wordDict `，求`s`能否被分割成字典中的word
+~~~
+Example 1:
+
+Input: s = "leetcode", wordDict = ["leet", "code"]
+Output: true
+Explanation: Return true because "leetcode" can be segmented as "leet code".
+Example 2:
+
+Input: s = "applepenapple", wordDict = ["apple", "pen"]
+Output: true
+Explanation: Return true because "applepenapple" can be segmented as "apple pen apple".
+             Note that you are allowed to reuse a dictionary word.
+Example 3:
+
+Input: s = "catsandog", wordDict = ["cats", "dog", "sand", "and", "cat"]
+Output: false
+
+~~~
+由于wordDict可以连续使用，采用动态规划，如果上个为true的到现在的子字符串在wordDict中，就说明可以组成
+~~~
+class Solution {
+    public boolean wordBreak(String s, List<String> wordDict) {
+        if(s==null||wordDict==null) return false;
+        int len = s.length();
+        boolean[] res = new boolean[len+1];
+        res[0] = true;
+        for(int i=1;i<=len;i++)
+        {
+            for(int j=0;j<i;j++)
+            {
+                if(res[j]==true)
+                {
+                    String str = s.substring(j,i);
+                    if(wordDict.contains(str))
+                        res[i] = true;
+                }
+            }
+        }
+        return res[len];
+    }
+}
+~~~
+### LeetCode140. Word Break II
+给定非空字符串`s`和非空字典`wordDict `，求`s`能否被分割成字典中的word，并得到所有序列的结果
+~~~
+Example 1:
+
+Input:
+s = "catsanddog"
+wordDict = ["cat", "cats", "and", "sand", "dog"]
+Output:
+[
+  "cats and dog",
+  "cat sand dog"
+]
+Example 2:
+
+Input:
+s = "pineapplepenapple"
+wordDict = ["apple", "pen", "applepen", "pine", "pineapple"]
+Output:
+[
+  "pine apple pen apple",
+  "pineapple pen apple",
+  "pine applepen apple"
+]
+Explanation: Note that you are allowed to reuse a dictionary word.
+Example 3:
+
+Input:
+s = "catsandog"
+wordDict = ["cats", "dog", "sand", "and", "cat"]
+Output:
+[]
+~~~
+使用一个 HashMap<String,List<String>>结构保存s对应的结果，将当前word和后面的substring对应的List中的string拼接起来</br>
+最后将当前s对应的List<String> 存入Map结构中
+~~~
+class Solution {
+    public List<String> wordBreak(String s, List<String> wordDict) {
+        HashMap<String,List<String>> memo = new HashMap<>();
+        return back(s,wordDict,memo);
+    }
+    private List<String> back(String s,List<String> wordDict,HashMap<String,List<String>> memo)
+    {
+        if(memo.containsKey(s)) return memo.get(s);
+        List<String> res = new ArrayList<>();
+
+        for(String word:wordDict)
+        {
+            if(s.startsWith(word))
+            {
+                String sub = s.substring(word.length());
+                if(sub.length()==0) res.add(word);
+                else{
+                    for(String str:back(sub,wordDict,memo)){
+                    res.add(word+" "+str);
+                    }
+                }
+
+            }
+        }
+        memo.put(s,res);
+        return res;    
+    }
+}
+~~~
+
+### LeetCode127. Word Ladder
+给两个词，开始词和结束词，和一个词典，找到从开始词到结束词最短转换路径，要求：</br>
+1. 一次只能转换一个字母
+2. 转换中间词必须在词典中，**开始词不在词典中**
+~~~
+Example 1:
+
+Input:
+beginWord = "hit",
+endWord = "cog",
+wordList = ["hot","dot","dog","lot","log","cog"]
+
+Output: 5
+
+Explanation: As one shortest transformation is "hit" -> "hot" -> "dot" -> "dog" -> "cog",
+return its length 5.
+Example 2:
+
+Input:
+beginWord = "hit"
+endWord = "cog"
+wordList = ["hot","dot","dog","lot","log"]
+
+Output: 0
+
+Explanation: The endWord "cog" is not in wordList, therefore no possible transformation.
+~~~
+题解：
+- 使用两个Set，reached表示每个词变化一个字母可以得到的字符串，如果存在WordDict中，就加入
+- 另一个Set，words表示还剩余可以达到的字符串，如果一个词已经加入reached，就要从words中移除
+- 循环结束的条件是reached中包含了结束词，每次循环中更新step值，作为返回值
+~~~
+class Solution {
+    public int ladderLength(String beginWord, String endWord, List<String> wordList) {
+        Set<String> reached = new HashSet<>();
+        reached.add(beginWord);
+        Set<String> words = new HashSet<>(wordList);
+        //words.add(endWord);
+        int step = 1;
+        while(!reached.contains(endWord))
+        {
+            Set<String> temp = new HashSet<>();
+            for(String str:reached)
+            {
+                for(int i=0;i<str.length();i++)
+                {
+                    char[] ch = str.toCharArray();
+                    for(char j='a';j<='z';j++)
+                    {
+                        if(ch[i]==j)
+                            continue;
+                        ch[i] = j;
+                        String s = new String(ch);
+                        if(words.contains(s))
+                        {
+                            temp.add(s);
+                            words.remove(s);
+                        }
+                    }
+                }
+            }
+            step++;
+            if(temp.size()==0) return 0;
+            reached = temp;
+        }
+        return step;
+}
+}
+~~~
+### LeetCode126. Word Ladder II
+~~~
+给两个词，开始词和结束词，和一个词典，找到从开始词到结束词最短转换路径，并找到所有可能的变换序列，要求：</br>
+1. 一次只能转换一个字母
+2. 转换中间词必须在词典中，**开始词不在词典中**
+~~~
 ### LeetCode146. LRU Cache
 ~~~
 Example:
@@ -1024,6 +1209,67 @@ class LFUCache {
         min = 1;
     }
 }
+~~~
+### 实现Trie树
+调用方式如下
+~~~
+/**
+ * Your Trie object will be instantiated and called as such:
+ * Trie obj = new Trie();
+ * obj.insert(word);
+ * boolean param_2 = obj.search(word);
+ * boolean param_3 = obj.startsWith(prefix);
+ */
+~~~
+~~~
+class Trie {
+    
+    private Node root;
+
+    private class Node{
+        boolean isleaf;
+        Node[] next = new Node[256];
+    }
+    /** Initialize your data structure here. */
+    public Trie() {
+        this.root = new Node();
+    }
+    
+    /** Inserts a word into the trie. */
+    public void insert(String word) {
+        put(root,word,0);
+    }
+    
+    private Node put(Node root,String word,int d){
+        if(root==null) root = new Node();
+        if(d==word.length()){
+            root.isleaf = true;
+            return root;
+        }
+        char c = word.charAt(d);
+        root.next[c] = put(root.next[c],word,d+1);
+        return root;
+    }
+    
+    /** Returns if the word is in the trie. */
+    public boolean search(String word) {
+        Node leaf = get(root,word,0);
+        return leaf!=null&&leaf.isleaf;
+    }
+    
+    private Node get(Node root,String word,int d){
+        if(root==null) return null;
+        if(d==word.length()) return root;
+        char c = word.charAt(d);
+        return get(root.next[c],word,d+1);
+    }
+    
+    /** Returns if there is any word in the trie that starts with the given prefix. */
+    public boolean startsWith(String prefix) {
+        return get(root,prefix,0)!=null;
+    }
+}
+
 ~~~
 ### LeetCode19. Remove Nth Node From End of List移除倒数第N个链表节点
 使用双指针
@@ -1480,6 +1726,79 @@ public class Solution {
         return ans;
     }
 ~~~
+### LeetCode684. 冗余连接
+给定二维的无向边描述一张图，[u, v] 同时 u < v, 代表无向边u和v相连，找到一条边，移除之后能构成一颗树
+~~~
+Example 1:
+Input: [[1,2], [1,3], [2,3]]
+Output: [2,3]
+Explanation: The given undirected graph will be like this:
+  1
+ / \
+2 - 3
+Example 2:
+Input: [[1,2], [2,3], [3,4], [1,4], [1,5]]
+Output: [1,4]
+Explanation: The given undirected graph will be like this:
+5 - 1 - 2
+    |   |
+    4 - 3
+~~~
+本质问题是环的检测，本来图中有环存在，当去掉某一条边之后就没有环，使用连通分量`UnionFind`的方式，对每一个输入做聚合，找出第一个使整个图连城环的边
+~~~
+class Solution {
+    public int[] findRedundantConnection(int[][] edges) {
+        if(edges==null||edges.length==0) return new int[0];
+        int len = edges.length;
+        UnionFind union = new UnionFind(len);
+        for(int[] edge:edges){
+            int x = edge[0];
+            int y = edge[1];
+            if(!union.union(x,y))
+                return edge;
+        }
+        return new int[0];
+
+}
+            class UnionFind{
+            private int[] parent;
+            private int[] rank;
+            
+            public UnionFind(int n){
+                parent = new int[n+1];
+                rank = new int[n+1];
+                for(int i=0;i<n+1;i++){
+                    parent[i] = i;
+                }
+                Arrays.fill(rank,1);
+            }
+            
+            public int find(int x){
+                if(parent[x]==x)
+                    return x;
+                else return find(parent[x]);
+            }
+            
+            public boolean union(int x,int y){
+                int rootX = find(x);
+                int rootY = find(y);
+                
+                if(rootX == rootY){
+                    return false;
+                }
+                if(rank[rootX]<rank[rootY]){
+                    parent[rootX] = rootY;
+                    rank[rootY] += rank[rootX];
+                }else{
+                    parent[rootY] = rootX;
+                    rank[rootX] += rank[rootY];
+                }
+                return true;
+            }
+        }
+}
+~~~
+
 ### 编程之美3.8：求二叉树中节点的最大距离
 二叉树中节点的最大距离必定是两个叶子节点的距离。求某个子树的节点的最大距离，有三种情况：
 1. 两个叶子节点都出现在左子树；
