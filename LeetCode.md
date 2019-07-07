@@ -1,5 +1,5 @@
 ### LeetCode1. Two Sum
-~~~
+~~~java
     public int[] twoSum(int[] nums, int target) {
         int[] res = new int[2];
         HashMap<Integer,Integer> map = new HashMap<>();
@@ -17,7 +17,7 @@
 ~~~
 ### LeetCode15. 3Sum
 找到和为`0`的所有三个数
-~~~
+~~~java
 public List<List<Integer>> threeSum(int[] num) {
     Arrays.sort(num);
     List<List<Integer>> res = new LinkedList<>(); 
@@ -41,7 +41,8 @@ public List<List<Integer>> threeSum(int[] num) {
 ### LeetCode16. 3Sum Closest
 输入一组数组和`target`，找到距离`target`最近的三个数
 题解：和上题类似，先随便确定一个sum值，每次设置三个位置，绝对值较小就更新结果
-~~~
+
+~~~java
 public class Solution {
     public int threeSumClosest(int[] num, int target) {
         int result = num[0] + num[1] + num[num.length - 1];
@@ -66,7 +67,7 @@ public class Solution {
 ~~~
 ### LeetCode18. 4Sum
 将题目转化为3Sum问题
-~~~
+~~~java
 public class Solution {
 public List<List<Integer>> fourSum(int[] num, int target) {
     ArrayList<List<Integer>> ans = new ArrayList<>();
@@ -100,7 +101,7 @@ public List<List<Integer>> fourSum(int[] num, int target) {
 }
 ~~~
 ### LeetCode26. Remove Duplicates from Sorted Array
-~~~
+~~~java
     public int removeDuplicates(int[] nums) {
         if(nums==null) return 0;
         int len = nums.length;
@@ -115,7 +116,7 @@ public List<List<Integer>> fourSum(int[] num, int target) {
 ~~~
 ### LeetCode27. Remove Element
 在数组中移除指定元素
-~~~
+~~~java
 public int removeElement(int[] A, int elem) {
    int m = 0;    
    for(int i = 0; i < A.length; i++){
@@ -132,7 +133,8 @@ public int removeElement(int[] A, int elem) {
 ### LeetCode28. Implement strStr()实现indexOf函数
 在字符串中第一次出现的位置，没有的话返回-1
 此题可以练习KMP算法
-~~~
+
+~~~java
 	// next数组计算
 	private void getNext(String pattern, int next[]) {
 		int j = 0;
@@ -190,7 +192,56 @@ public int removeElement(int[] A, int elem) {
 		return -1;
 	}
 ~~~
+### 寻找数组中第三大的数
+
+维持三个数，分别作为最大 第二大 与第三大 
+于是引出一个问题：重复元引发结果有差异，如何解决？——引进变量fi，每有重复元fi–，如果最后fi小于3，那么说明没有第三大的数。 
+但是出现一个新的问题，如果有一个元素为Integer.MIN_VALUE，那么方法仍旧会有错。解决思路是设置一个标志量，只在第一次出现这个Integer.MIN_VALUE时，不处理fi–，后面的照常。
+
+~~~Java
+class Solution {
+    public int thirdMax(int[] nums) {
+        if (nums == null || nums.length == 0)
+            return -1;
+        int len = nums.length;
+        if (len == 1)
+            return nums[0];
+        if (len == 2)
+            return Math.max(nums[0], nums[1]);
+        int cf=len,n1,n2,n3;
+        n1=n2=n3=Integer.MIN_VALUE;
+        boolean fi=false;
+        for(int num:nums) {
+            if(num==Integer.MIN_VALUE&&!fi){//用于解决第一次出现最小值的问题
+                fi=true;
+                continue;
+            }
+            if(num==n1||num==n2||n3==num) {
+                cf--;
+                continue;
+            }
+            if(num>n1) {
+                n3=n2;n2=n1;
+                n1=num;continue;
+            } 
+            else if(num>n2) {
+                n3=n2;
+                n2=num;continue;
+            }
+            else if(num>n3) {
+                n3=num;
+            }
+
+        }
+        return cf>=3?n3:n1;
+    }
+}
+~~~
+
+
+
 ### LeetCode30. Substring with Concatenation of All Words
+
 给定一个字符串和一组词，词的长度都一样，找到S子串包含，将word数组中的所有组合，每个词只能用一次
 ~~~
 Example 1:
@@ -1031,12 +1082,12 @@ class Solution {
 ~~~
 ### LeetCode126. Word Ladder II
 ~~~
-给两个词，开始词和结束词，和一个词典，找到从开始词到结束词最短转换路径，并找到所有可能的变换序列，要求：</br>
+给两个词，开始词和结束词，和一个词典，找到从开始词到结束词最短转换路径，并找到所有可能的变换序列，要求：
 1. 一次只能转换一个字母
 2. 转换中间词必须在词典中，**开始词不在词典中**
 ~~~
 ### LeetCode146. LRU Cache
-~~~
+~~~java
 Example:
 
 LRUCache cache = new LRUCache( 2 /* capacity */ );
@@ -1051,7 +1102,7 @@ cache.get(1);       // returns -1 (not found)
 cache.get(3);       // returns 3
 cache.get(4);       // returns 4
 ~~~
-~~~
+~~~java
 class LRUCache {
     
     class Node{
