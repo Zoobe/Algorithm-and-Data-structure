@@ -259,13 +259,13 @@ Input:
   words = ["word","good","best","word"]
 Output: []
 ~~~
-~~~
+~~~java
 public static List<Integer> findSubstring(String S, String[] L) {
     List<Integer> res = new ArrayList<Integer>();
     if (S == null || L == null || L.length == 0) return res;
-    int len = L[0].length(); // length of each word
+    int len = L[0].length(); // 每个单词的长度
     
-    Map<String, Integer> map = new HashMap<String, Integer>(); // map for L
+    Map<String, Integer> map = new HashMap<String, Integer>(); // 对词语集合建立一个map
     for (String w : L) map.put(w, map.containsKey(w) ? map.get(w) + 1 : 1);
     
     for (int i = 0; i <= S.length() - len * L.length; i++) {
@@ -287,7 +287,7 @@ public static List<Integer> findSubstring(String S, String[] L) {
 }
 ~~~
 ### LeetCode2. Add Two Numbers
-~~~
+~~~java
     public ListNode addTwoNumbers(ListNode l1, ListNode l2) {
         ListNode c1 = l1;
         ListNode c2 = l2;
@@ -319,7 +319,7 @@ Input: head = 1->4->3->2->5->2, x = 3
 Output: 1->2->2->4->3->5
 ~~~
 解法：基本思想是建立两个队列，一个存储小于x的，一个保存剩余元素，最后要将第二个队列置为0，防止死循环
-~~~
+~~~java
 public ListNode partition(ListNode head, int x) {
     ListNode dummy1 = new ListNode(0), dummy2 = new ListNode(0);  //两个队列的虚拟头结点
     ListNode curr1 = dummy1, curr2 = dummy2;      //两个队列的当前尾部
@@ -386,13 +386,13 @@ Output: 1->1->2->3->4->4->5->6
         return dummy.next;
     }
 ~~~
-### LeetCode24. Swap Nodes in Pairs
+### LeetCode24. 交换链表相邻的两个元素
 给定链表，交换相邻两个链表元素
 ~~~
 Given 1->2->3->4, you should return the list as 2->1->4->3.
 ~~~
 题解：因为返回的是交换之后的头部，可以用递归
-~~~
+~~~java
     public ListNode swapPairs(ListNode head) {
         if(head==null || head.next==null) return head;
         ListNode l1 = head.next;
@@ -411,7 +411,7 @@ For k = 2, you should return: 2->1->4->3->5
 For k = 3, you should return: 3->2->1->4->5
 ~~~
 题解：
-~~~
+~~~java
 public ListNode reverseKGroup(ListNode head, int k) {
     ListNode curr = head;
     int count = 0;
@@ -435,8 +435,8 @@ public ListNode reverseKGroup(ListNode head, int k) {
 }
 ~~~
 
-### LeetCode3. Longest Substring Without Repeating Characters
-~~~
+### LeetCode3. 最长无重复字符子串
+~~~Java
     public int lengthOfLongestSubstring(String s) {
         int len = s.length();
         if(len == 0 || len == 1) return len;
@@ -461,14 +461,15 @@ public ListNode reverseKGroup(ListNode head, int k) {
         return res;
     }
 ~~~
-### LeetCode4. Median of Two Sorted Arrays
+### LeetCode4. 两个有序数组的中位数
 假设两个有序数组的长度分别为m和n，由于两个数组长度之和 m+n 的奇偶不确定，因此需要分情况来讨论，对于奇数的情况，直接找到最中间的数即可，偶数的话需要求最中间两个数的平均值。为了简化代码，不分情况讨论，
 我们使用一个小trick，我们分别找第 `(m+n+1) / 2 `个，和 `(m+n+2) / 2 `个，然后求其平均值即可，这对奇偶数均适用。加入 m+n 为奇数的话，那么其实 (m+n+1) / 2 和 (m+n+2) / 2 的值相等，相当于两个相同的数字相加再除以2，还是其本身。
 其实要对K二分，意思是我们需要分别在nums1和nums2中查找第K/2个元素，注意这里由于两个数组的长度不定，所以有可能某个数组没有第K/2个数字，所以我们需要先check一下，数组中到底存不存在第K/2个数字，
 如果存在就取出来，否则就赋值上一个整型最大值.</br>
 如果某个数组没有第K/2个数字，那么我们就淘汰另一个数组的前K/2个数字即可。举个例子来说吧，比如 nums1 = {3}，nums2 = {2, 4, 5, 6, 7}，K=4，我们要找两个数组混合中第4个数字，那么我们分别在 nums1 和 nums2 中找第2个数字，我们发现 nums1 中只有一个数字，不存在第二个数字，那么 nums2 中的前2个数字可以直接跳过，为啥呢，因为我们要求整个混合数组的第4个数字，不管 nums1 中的那个数字是大是小，第4个数字绝不会出现在 nums2 的前两个数字中，所以可以直接跳过。
 有没有可能两个数组都不存在第K/2个数字呢，这道题里是不可能的，因为我们的K不是任意给的，而是给的m+n的中间值，所以必定至少会有一个数组是存在第K/2个数字的。最后就是二分法的核心啦，比较这两个数组的第K/2小的数字midVal1和midVal2的大小，如果第一个数组的第K/2个数字小的话，那么说明我们要找的数字肯定不在nums1中的前K/2个数字，所以我们可以将其淘汰，将nums1的起始位置向后移动K/2个，并且此时的K也自减去K/2，调用递归。反之，我们淘汰nums2中的前K/2个数字，并将nums2的起始位置向后移动K/2个，并且此时的K也自减去K/2，调用递归即可，
-~~~
+
+~~~Java
     public double findMedianSortedArrays(int[] A, int[] B) {
           int m = A.length, n = B.length;
           int l = (m + n + 1) / 2;
@@ -492,9 +493,10 @@ public ListNode reverseKGroup(ListNode head, int k) {
     }
 ~~~
 ### LeetCode5. Longest Palindromic Substring最长回文子串
-从0遍历到`s.length()-1` </br>
+从0遍历到`s.length()-1` 
 分为奇数和偶数两种情况扩展
-~~~
+
+~~~java
 public class Solution {
 private int lo, maxLen;
 
@@ -523,8 +525,9 @@ private void extendPalindrome(String s, int j, int k) {
 ~~~
 ### LeetCode6. ZigZag Conversion
 假设字符串按照Z字排列
-如： </br>
-给定`"PAYPALISHIRING"` 和行数`3` </br>
+如： 
+给定`"PAYPALISHIRING"` 和行数`3` 
+
 ~~~
 P   A   H   N
 A P L S I I G
@@ -569,7 +572,7 @@ Input: 120
 Output: 21
 ~~~
 
-~~~
+~~~java
     public int reverse(int x) {
         int res = 0,tail = 0;
         while(x != 0)
@@ -594,7 +597,7 @@ Example 2:
 Input: -121
 Output: false
 ~~~
-~~~
+~~~Java
     public boolean isPalindrome(int x) {
         if(x<0) return false;
         int res = 0;
@@ -611,12 +614,13 @@ Output: false
     }
 ~~~
 ### LeetCode10. Regular Expression Matching正则表达式匹配
-给定字符串`s`和`p` </br>
-`s`中只有`a-z`的小写字符 </br>
-`p`除了`a-z`的字符外，还有`. `和`* `</br>
-`'.'` 匹配任意单个字符 </br>
-`'*'` 匹配零个或者之前任意一个字符 </br>
-~~~
+给定字符串`s`和`p` 
+`s`中只有`a-z`的小写字符 
+`p`除了`a-z`的字符外，还有`. `和`* `
+`'.'` 匹配任意单个字符 
+`'*'` 匹配零个或者之前任意一个字符 
+
+~~~java
 public boolean isMatch(String s, String p) {
 
     if (s == null || p == null) {
@@ -655,7 +659,7 @@ public boolean isMatch(String s, String p) {
 `p`除了`a-z`的字符外，还有`?` 和`*` </br>
 `'?'` 匹配任意单个字符 </br>
 `'*'` 匹配任意连续字符，包括空字符 </br>
-~~~
+~~~Java
 public class Solution {
     public boolean isMatch(String s, String p) {
         boolean[][] match=new boolean[s.length()+1][p.length()+1];
@@ -734,9 +738,10 @@ Example:
 Input: [1,8,6,2,5,4,8,3,7]
 Output: 49
 ~~~
-可以用一点点贪心去解这道题，一步步缩小子数组的大小。</br>
+可以用一点点贪心去解这道题，一步步缩小子数组的大小。
 左边低就缩左边，右边低就缩右边
-~~~
+
+~~~java
 public int maxArea(int[] height) {
     int left = 0, right = height.length - 1;
 	int maxArea = 0;
@@ -754,8 +759,9 @@ public int maxArea(int[] height) {
 }
 ~~~
 ### LeetCode135. Candy
-规则1：每个人手中至少一个 </br>
+规则1：每个人手中至少一个 
 规则2：评分更高的孩子比左右邻居糖果数量多：分别遍历比较比左侧孩子多，比右侧孩子多。
+
 ~~~
 Example 1:
 
@@ -770,12 +776,13 @@ Output: 4
 Explanation: You can allocate to the first, second and third child with 1, 2, 1 candies respectively.
              The third child gets 1 candy because it satisfies the above two conditions.
 ~~~
-使用贪心算法，从左到右遍历确保高分孩子比左侧糖果多，从右向左遍历确保高分孩子比右侧糖果多。</br>
-算法步骤 </br>
+使用贪心算法，从左到右遍历确保高分孩子比左侧糖果多，从右向左遍历确保高分孩子比右侧糖果多。
+算法步骤 
+
 - 每个孩子一个糖果
 - 从左到右遍历，ratings[i+1]>ratings[i]时，candies[i+1]=candies[i] +1
 - 从右到左遍历，ratings[i-1]>ratings[i]时, candies[i-1]=max(candies[i-1], candies[i]+1)
-~~~
+~~~java
 public int candy(int[] ratings) {
     int candies[] = new int[ratings.length];        
     Arrays.fill(candies, 1);// Give each child 1 candy 
@@ -797,12 +804,13 @@ public int candy(int[] ratings) {
 ### LeetCode84. Largest Rectangle in Histogram
 给定n个整数代表直方图的高度，每个直方图宽度默认为1，找到直方图中的最大矩形
 题解：这道题可以用单调栈来求解，单调栈又两种：
+
  - 递增栈：递增栈是维护递增的顺序，当遇到小于栈顶元素的数就开始处理
  - 递减栈：递减栈正好相反，维护递减的顺序，当遇到大于栈顶元素的数开始处理。
    那么根据这道题的特点，我们需要按从高板子到低板子的顺序处理，先处理最高的板子，宽度为1，然后再处理旁边矮一些的板子，此时长度为2，因为之前的高板子可组成矮板子的矩形 ，`因此我们需要一个递增栈`，`当遇到大的数字直接进栈，而当遇到小于栈顶元素的数字时，就要取出栈顶元素进行处理了`，那取出的顺序就是从高板子到矮板子了，于是乎遇到的较小的数字只是一个触发，表示现在需要开始计算矩形面积了 </br>
-   为了使得最后一块板子也被处理，这里用了个小trick，在高度数组最后面加上一个0，这样原先的最后一个板子也可以被处理了。</br>
-   单调栈中不能放高度，而是需要放坐标。由于我们先取出栈中最高的板子，那么就可以先算出长度为1的矩形面积了，然后再取下一个板子，此时根据矮板子的高度算长度为2的矩形面积，以此类推，知道数字大于栈顶元素为止，再次进栈，巧妙的一比！
-~~~
+   为了使得最后一块板子也被处理，这里用了个小trick，在高度数组最后面加上一个0，这样原先的最后一个板子也可以被处理了。
+   单调栈中不能放高度，而是需要放坐标。由于我们先取出栈中最高的板子，那么就可以先算出长度为1的矩形面积了，然后再取下一个板子，此时根据矮板子的高度算长度为2的矩形面积，以此类推，直到数字大于栈顶元素为止，再次进栈，巧妙的一比！
+~~~java
 public class Solution {
     public int largestRectangleArea(int[] height) {
         int len = height.length;
@@ -826,7 +834,7 @@ public class Solution {
 给定由`0`，`1`组成的二维矩阵，找到最大的矩形并求得其面积
   此题是之前那道的 Largest Rectangle in Histogram 直方图中最大的矩形 的扩展，这道题的二维矩阵每一层向上都可以看做一个直方图，输入矩阵有多少行，就可以形成多少个直方图，对每个直方图都调用 Largest Rectangle in Histogram 直方图中最大的矩形 中的方法，就可以得到最大的矩形面积。那么这道题唯一要做的就是将每一层构成直方图，由于题目限定了输入矩阵的字符只有 '0' 和 '1' 两种，所以处理起来也相对简单。方法是，对于每一个点，如果是‘0’，则赋0，如果是 ‘1’，就赋 之前的height值加上1。
   而且可以边构建height数组边计算最大面积
-~~~
+~~~Java
     public int maximalRectangle(char[][] matrix) {
         if(matrix==null||matrix.length==0||matrix[0]==null||matrix[0].length==0) return 0;
         int row = matrix.length;
