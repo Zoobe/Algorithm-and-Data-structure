@@ -2,6 +2,7 @@
 ## 批处理
 用户访问session分析Spark作业，接收用户创建的分析任务自动化执行数据处理过程
 用户可能指定的条件如下：
+
 ~~~
  * 1、时间范围：起始日期~结束日期
  * 2、性别：男或女
@@ -22,18 +23,21 @@ J2EE平台在接收用户创建任务的请求之后，会将任务信息插入M
 2. 使用FastJson工具解析任务参数
 ### 二、按照session粒度进行数据聚合
 1. 首先要从`user_visit_action`表中，查询出来指定日期范围内的行为数据
+
 2. 得到actionRDD，就是一个公共RDD，后面还要使用，将其persist持久化
     如果是persist(StorageLevel.MEMORY_ONLY())，纯内存，无序列化，那么就可以用cache()方法来替代
-		 * StorageLevel.MEMORY_ONLY_SER()，第二选择
-		 * StorageLevel.MEMORY_AND_DISK()，第三选择
-		 * StorageLevel.MEMORY_AND_DISK_SER()，第四选择
-		 * StorageLevel.DISK_ONLY()，第五选择
+		 - StorageLevel.MEMORY_ONLY_SER()，第二选择
+		 - StorageLevel.MEMORY_AND_DISK()，第三选择
+		 - StorageLevel.MEMORY_AND_DISK_SER()，第四选择
+		 - StorageLevel.DISK_ONLY()，第五选择
 		 * 
 		 * 如果内存充足，要使用双副本高可靠机制
 		 * 选择后缀带_2的策略
 		 * StorageLevel.MEMORY_ONLY_2()
 3. 首先，将行为数据，按照session_id进行groupByKey分组，再将分组内每一个sessionid的搜索词，点击品类等字符串拼接，计算每个session访问时长，访问步长
+
 4. 将上面的数据拼接为一个大的`<userid,大字符串>`的格式，再和user表查到的用户信息join，**注意此处可以采用map join数据倾斜的解决方法**
+
 5. 最后将数据映射为`<sessionid,(sessionid,searchKeywords,clickCategoryIds,age,professional,city,sex)`的格式
 ### 四、按照筛选参数对数据进行过滤并自定义accumulator对访问行为进行统计
 1. 按照之前解析到的任务的其他参数对数据进行过滤，因为过滤也是一条一条的处理，所以可以同时计算访问比例
@@ -64,11 +68,12 @@ spark.sparkContext.register(accumulator,"SessionAggrStatAccumulator")
 ## 流处理
 分为以下几步：
 ### 一、	构建SparkStreaming上下文
-传入的第一个参数，和之前的spark上下文一样，也是SparkConf对象；第二个参数则不太一样，是实时处理batch的interval </br>
-spark streaming，每隔一小段时间，会去收集一次数据源（kafka）中的数据，做成一个batch,每次都是处理一个batch中的数据</br>
+传入的第一个参数，和之前的spark上下文一样，也是SparkConf对象；第二个参数则不太一样，是实时处理batch的interval 
+spark streaming，每隔一小段时间，会去收集一次数据源（kafka）中的数据，做成一个batch,每次都是处理一个batch中的数据
 咱们这里项目中，就设置5秒钟的batch interval,
 每隔5秒钟，咱们的spark streaming作业就会收集最近5秒内的数据源接收过来的数据
-~~~
+
+~~~scala
     val sparkConf = new SparkConf()
       .setMaster("local[*]")
       .setAppName("AdClickRealTimeStatSpark")
@@ -77,7 +82,7 @@ spark streaming，每隔一小段时间，会去收集一次数据源（kafka）
 ~~~
 ### 二、	获得Kafka数据源
 主要要放置的就是，你要连接的kafka集群的地址（broker集群的地址列表）
-~~~
+~~~scala
     val kafkaParams = Map[String, String](
       "metadata.broker.list"->ConfigurationManager.getProperty(Constants.KAFKA_METADATA_BROKER_LIST)
     )
@@ -130,14 +135,14 @@ Receiver-based方法需要Receivers来异步持续不断的读取数据，因此
 基于direct的方式，使用kafka的简单api，Spark Streaming自己就负责追踪消费的offset，并保存在checkpoint中。Spark自己一定是同步的，因此可以保证数据是消费一次且仅消费一次。
 
 ### 三、根据动态黑名单进行数据过滤
-~~~
+~~~scala
     val filteredAdRealTimeLogDStream = filterByBlacklist(adRealTimeLogDStream)
 ~~~
 使用transform算子（将dstream中的每个batch RDD进行处理，转换为任意的其他RDD，功能很强大）
 0. 原始数据格式`timestamp province city userid adid`,将原始数据rdd映射成<userid, tuple2<string, string>>
 1. 首先，从mysql中查询所有黑名单用户，将其转换为一个rdd
 查询黑名单mysql得到的是一个List，将其映射为`tuple <userid,true>`的格式
-~~~
+~~~scala
 val tuples = adBlacklists.map(ad => (ad.getUserid, true))
 ~~~
 2. 通过当前transform遍历的rdd拿到sparkContext对象,采用`异步线程`的方式将黑名单转换为RDD，方便后面join
@@ -169,6 +174,7 @@ val joinedRDD = mappedRDD.leftOuterJoin(blacklistRDD)
 j2ee系统每隔几秒钟，就从mysql中搂一次最新数据，每次都可能不一样。
 将数据处理成`<date_province_city_adid,count>`的格式，在spark集群中保留一份；在mysql中，也保留一份
 `updateStateByKey`算子,维护一份key的全局状态
+
 1. 将原始DStream数据`date province city userid adid`映射成`<date_province_city_adid,1>`
 2. 对刚刚的DStream调用updateStateByKey算子，首先判断这个key是否已经存在，如果存在，就将这个key对应的值累加，并将key，value返回
 3. 将返回的值也就是统计出来的值写入到MySQL中
@@ -178,7 +184,7 @@ j2ee系统每隔几秒钟，就从mysql中搂一次最新数据，每次都可�
 3. 目的是计算出每天各个省份的Top3广告，由于上面的是当天的有状态的统计量，将上一步得到的RDD转换为Dataframe，注册为一张临时表，使用Spark SQL，通过开窗函数，获取到各省份的top3热门广告
     - 将RDD映射为`Row(date, province, adid, clickCount)`格式
     - 通过RDD拿到SparkSession单例对象，注册一张临时表
-      ~~~
+      ~~~scala
       val spark = SparkSessionSingleton.getInstance(rdd.sparkContext.getConf)
       val dailyAdClickCountByProvinceDF = spark.createDataFrame(rowsRDD,schema)
       ~~~
@@ -223,7 +229,7 @@ SparkStreaming.checkpoint("hdfs://192.168.1.105:9090/checkpoint")
 要求：
 + --deploy-mode cluster  保证运行在cluster模式，这样Driver运行再Worker上面，由Worker监控，但是这种模式不方便我们调试程序
 + --supervise   cluster模式中Driver运行在某个worker上，整个参数是由worker监控driver，挂了之后再重启driver。
-~~~
+~~~scala
 JavaStreamingContextFactory contextFactory = new JavaStreamingContextFactory() {
   @Override 
   public JavaStreamingContext create() {
@@ -250,7 +256,7 @@ spark.streaming.receiver.writeAheadLog.enable true
 
 #### 实时计算程序性能调优：
 1. 并行化数据接收：处理多个topic的数据时比较有效**只适用于receiver模式**
-~~~
+~~~scala
 int numStreams = 5;
 List<JavaPairDStream<String, String>> kafkaStreams = new ArrayList<JavaPairDStream<String, String>>(numStreams);
 for (int i = 0; i < numStreams; i++) {

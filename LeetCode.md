@@ -535,7 +535,7 @@ Y   I   R
 ~~~
 读时候按照横着读"PAHNAPLSIIGYIR"
 解答：每行创建一个StringBuilder，将原始字符串的字符加入相对应的字符串中
-~~~
+~~~java
 public String convert(String s, int nRows) {
     char[] c = s.toCharArray();
     int len = c.length;
@@ -654,11 +654,12 @@ public boolean isMatch(String s, String p) {
 }
 ~~~
 ### LeetCode44. Wildcard Matching
-给定字符串`s`和`p` </br>
-`s`中只有`a-z`的小写字符 </br>
-`p`除了`a-z`的字符外，还有`?` 和`*` </br>
-`'?'` 匹配任意单个字符 </br>
-`'*'` 匹配任意连续字符，包括空字符 </br>
+给定字符串`s`和`p` 
+`s`中只有`a-z`的小写字符 
+`p`除了`a-z`的字符外，还有`?` 和`*` 
+`'?'` 匹配任意单个字符 
+`'*'` 匹配任意连续字符，包括空字符 
+
 ~~~Java
 public class Solution {
     public boolean isMatch(String s, String p) {
@@ -1200,13 +1201,13 @@ class LRUCache {
 }
 ~~~
 ### LeetCode146. LFU Cache
-~~~
+~~~Java
 class LFUCache {
-    HashMap<Integer, Integer> vals;
-    HashMap<Integer, Integer> counts;
-    HashMap<Integer, LinkedHashSet<Integer>> lists;
+    HashMap<Integer, Integer> vals;  //记录要查找的key对应的value
+    HashMap<Integer, Integer> counts; //key调用的频率
+    HashMap<Integer, LinkedHashSet<Integer>> lists;  //频率-->相同频率的key集合
     int cap;
-    int min;
+    int min;  //记录所有频率的最小值
     
     public LFUCache(int capacity) {
         vals = new HashMap<>();
@@ -1280,7 +1281,7 @@ class LFUCache {
  * boolean param_3 = obj.startsWith(prefix);
  */
 ~~~
-~~~
+~~~java
 class Trie {
     
     private Node root;
@@ -1332,7 +1333,7 @@ class Trie {
 ~~~
 ### LeetCode19. Remove Nth Node From End of List移除倒数第N个链表节点
 使用双指针
-~~~
+~~~java
 public ListNode removeNthFromEnd(ListNode head, int n) {
     
     ListNode start = new ListNode(0);
@@ -1354,7 +1355,7 @@ public ListNode removeNthFromEnd(ListNode head, int n) {
 }
 ~~~
 ### LeetCode20. Valid Parentheses有效的括号
-~~~
+~~~java
 public boolean isValid(String s) {
 	Stack<Character> stack = new Stack<Character>();
 	for (char c : s.toCharArray()) {
@@ -1373,6 +1374,7 @@ public boolean isValid(String s) {
 ### LeetCode22. Generate Parentheses
 给定n对括号，写一个函数生成所有有效括号组合
 比如给定n=3，结果为
+
 ~~~
 [
   "((()))",
@@ -1382,7 +1384,7 @@ public boolean isValid(String s) {
   "()()()"
 ]
 ~~~
-~~~
+~~~java
 public List<String> generateParenthesis(int n) {
     List<String> list = new ArrayList<String>();
     generateOneByOne("", list, n, n);
@@ -1405,9 +1407,10 @@ public void generateOneByOne(String sublist, List<String> list, int left, int ri
 }
 ~~~
 ### LeetCode32. Longest Valid Parentheses
-给定一个字符串只包含`(`和`)`，找出最长的有效子串
+给定一个字符串只包含左括号`(`和右括号`)`，找出最长的有效子串
 解法：使用单调栈的思想
-~~~
+
+~~~java
     public int longestValidParentheses(String s) {
         int len = s.length();
         if(s.length()==0) return 0;
@@ -1437,7 +1440,7 @@ Output:
   ["a","a","b"]
 ]
 ~~~
-~~~
+~~~java
     public List<List<String>> partition(String s) {
         List<List<String>> res = new LinkedList<>();
         if(s==null||s.length()==0) return res;
@@ -1488,6 +1491,7 @@ Explanation: The palindrome partitioning ["aa","b"] could be produced using 1 cu
 这里需要两个DP数组，cut数组记录最小分割次数，pal数组记录在[j,i]之间是否是回文串
 DP1 如果[j,i]是回文串，只需要cut[i] = cut[j - 1] + 1 (j <= i)
 DP2 如果[j,i]是回文串，[j + 1, i - 1]也是回文串，同时c[j] == c[i]
+
 ~~~
 a   b   a   |   c  c
                 j  i
@@ -1495,7 +1499,7 @@ a   b   a   |   c  c
    cut(j-1) +  1
 ~~~
 
-~~~
+~~~java
 public int minCut(String s) {
      boolean[][] isPalindr = new boolean[n + 1][n + 1]; //isPalindr[i][j] = true means s[i:j) is a valid palindrome
      int[] dp = new int[n + 1]; //dp[i] means the minCut for s[0:i) to be partitioned 
@@ -1543,11 +1547,12 @@ Input: [3,4,5,1,3,null,1]
 Output: 9
 Explanation: Maximum amount of money the thief can rob = 4 + 5 = 9.
 ~~~
-题解：如果左孩子存在，计算出左孩子的左子节点的最大值，还有左孩子右子节点的最大值</br>
-如果右孩子存在，计算出右孩子的左子节点的最大值，还有右孩子右子节点的最大值</br>
-比较当前节点加上孙子节点和不算当前节点(只算当前节点的左右子节点的和)的最大值</br>
+题解：如果左孩子存在，计算出左孩子的左子节点的最大值，还有左孩子右子节点的最大值
+如果右孩子存在，计算出右孩子的左子节点的最大值，还有右孩子右子节点的最大值
+比较当前节点加上孙子节点和不算当前节点(只算当前节点的左右子节点的和)的最大值
 为了防止溢出超时，采用HashMap保存当前节点的最大值
-~~~
+
+~~~java
 public class Solution {
     public int rob(TreeNode root) {
         if(root==null) return 0;
@@ -1556,7 +1561,7 @@ public class Solution {
         int left=0, right=0;
         int subleft=0, subright=0;
     
-    if(root.left!=null){
+   	 if(root.left!=null){
         left=rob(root.left);
         subleft=rob(root.left.left)+rob(root.left.right);
     }
@@ -1575,7 +1580,7 @@ public class Solution {
 ### LeetCode172. Factorial Trailing Zeroes
 找出阶乘N！结果中的0的个数
 题解：让求一个数的阶乘末尾0的个数，也就是要找乘数中10的个数，而10可分解为2和5，而我们可知2的数量又远大于5的数量，那么此题即便为找出5的个数。仍需注意的一点就是，像25,125，这样的不只含有一个5的数字需要考虑进去。
-~~~
+~~~java
     public int trailingZeroes(int n) {
         int res = 0;
         while (n > 0) {
@@ -1586,11 +1591,12 @@ public class Solution {
     }
 ~~~
 ### LeetCode235. Lowest Common Ancestor of a Binary Search Tree二叉搜索树的最低公共祖先
-题解：根据二叉搜索树的性质</br>
-如果根节点的值大于p和q之间的较大值，说明p和q都在左子树中，那么此时我们就进入根节点的左子节点继续递归</br>
-如果根节点小于p和q之间的较小值，说明p和q都在右子树中，那么此时我们就进入根节点的右子节点继续递归</br>
+题解：根据二叉搜索树的性质
+如果根节点的值大于p和q之间的较大值，说明p和q都在左子树中，那么此时我们就进入根节点的左子节点继续递归
+如果根节点小于p和q之间的较小值，说明p和q都在右子树中，那么此时我们就进入根节点的右子节点继续递归
 如果都不是，则说明当前根节点就是最小共同父节点，直接返回即可
-~~~
+
+~~~java
 public class Solution {
     public TreeNode lowestCommonAncestor(TreeNode root, TreeNode p, TreeNode q) {
         if(root.val > p.val && root.val > q.val){
@@ -1624,7 +1630,7 @@ Explanation: The LCA of nodes 5 and 4 is 5, since a node can be a descendant of 
 - 若p和q要么分别位于左右子树中，那么对左右子结点调用递归函数，会分别返回p和q结点的位置，而当前结点正好就是p和q的最小共同父结点，直接返回当前结点即可，这就是题目中的例子1的情况。
 - 若p和q同时位于左子树，这里有两种情况，一种情况是left会返回p和q中较高的那个位置，而right会返回空，所以我们最终返回非空的left即可，这就是题目中的例子2的情况。还有一种情况是会返回p和q的最小父结点，就是说当前结点的左子树中的某个结点才是p和q的最小父结点，会被返回。
 - 若p和q同时位于右子树，同样这里有两种情况，一种情况是right会返回p和q中较高的那个位置，而left会返回空，所以我们最终返回非空的right即可，还有一种情况是会返回p和q的最小父结点，就是说当前结点的右子树中的某个结点才是p和q的最小父结点，会被返回
-~~~
+~~~java
 public class Solution {
     public TreeNode lowestCommonAncestor(TreeNode root, TreeNode p, TreeNode q) {
         if(root == null || root == p || root == q)  return root;
@@ -1637,7 +1643,7 @@ public class Solution {
 ~~~
 ### LeetCode136. Single Number
 只有一个数出现了一次，其他都出现两次
-~~~
+~~~java
 public int singleNumber(int[] nums) {
     int ans =0;
     
@@ -1652,7 +1658,7 @@ public int singleNumber(int[] nums) {
 ### LeetCode137. Single Number II
 只有一个数出现了一次，其他都出现了三次
 题解：我们可以建立一个32位的数字，来统计每一位上1出现的个数，我们知道如果某一位上为1的话，那么如果该整数出现了三次，对3去余为0，我们把每个数的对应位都加起来对3取余，最终剩下来的那个数就是单独的数字。
-~~~
+~~~java
 public int singleNumber(int[] nums) {
     int ans = 0;
     for(int i = 0; i < 32; i++) {
@@ -2024,8 +2030,36 @@ public class NumArray {
 	}
 }
 ~~~
-### 手写线程池
+### 蓄水池算法（水塘抽样）
+
+在一个不知道容量的抽取10个球，每个球抽中的比例一样
+
+~~~java
+// 一个简单的随机函数，决定一件事情做还是不做
+public int rand(int max){
+	return (int)(Math.random()*max)+1;
+}
+public int[] getKNumsRead(int k,int max){
+    if(max<1||k<1) return null;
+    int[] res = new int[Math.min(k,max)];
+    for(int i=0;i!=res.length;i++){
+        res[i] = i+1; //前k个数直接进袋子
+    }
+    for(int i=k+1;i<max+1;i++){
+        if(rand(i)<=k){
+            res[rand(k)-1]=i; // i随机替换掉袋子中的一个
+        }
+    }
+}
 ~~~
+
+
+
+
+
+### 手写线程池
+
+~~~Java
 /**
  * 线程池方法定义
  * @author hrabbit
